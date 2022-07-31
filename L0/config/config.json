@@ -1,0 +1,15 @@
+{
+  "Provider": {
+    "ProviderType": "HTTP",
+    "ProviderName": ""
+  },
+  "Cache": {
+    "Size": 25
+  },
+  "Logger": {
+    "Level": "INFO",
+    "LogFile": "./log.txt"
+  },
+  "DSN": "user=postgres dbname=WB sslmode=disable password=masterkey",
+  "HTTPSrv": "127.0.0.1:3541"
+}
