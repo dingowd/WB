@@ -1,0 +1,28 @@
+dsn = "user=postgres dbname=WB sslmode=disable password=masterkey"
+httpsrv = "127.0.0.1:3541"
+
+[logger]
+level = "INFO"
+logfile = "./log.txt"
+
+[subscriber]
+clusterid = "WB_Cluster"
+clientid = "wbClient"
+url = "nats://127.0.0.1:4222"
+usercreds = ""
+showtime = false
+qgroup = ""
+unsubscribe = false
+startseq = 0
+startdelta = ""
+deliverall = true
+newonly = true
+deliverlast = false
+durable = ""
+subj = "order"
+
+[cache]
+size = 25
+
+# TODO
+# ...

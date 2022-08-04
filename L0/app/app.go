@@ -1,17 +1,18 @@
 package app
 
 import (
-	"github.com/dingowd/WB/L0/model"
+	"github.com/dingowd/WB/L0/logger"
+	"github.com/dingowd/WB/L0/storage"
 )
 
 type App struct {
-	Logg    model.Logger
-	Storage model.Storage
+	Log   logger.Logger
+	Store storage.Storage
 }
 
-func New(logger model.Logger, storage model.Storage) *App {
+func New(logger logger.Logger, storage storage.Storage) *App {
 	return &App{
-		Logg:    logger,
-		Storage: storage,
+		Log:   logger,
+		Store: storage,
 	}
 }

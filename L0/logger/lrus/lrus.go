@@ -5,15 +5,15 @@ import (
 	"io"
 )
 
-type Logger struct {
+type Lrus struct {
 	Log *logrus.Logger
 }
 
-func New() *Logger {
-	return &Logger{Log: logrus.New()}
+func New() *Lrus {
+	return &Lrus{Log: logrus.New()}
 }
 
-func (l *Logger) SetLevel(level string) {
+func (l *Lrus) SetLevel(level string) {
 	switch level {
 	case "INFO":
 		l.Log.Level = logrus.InfoLevel
@@ -28,22 +28,22 @@ func (l *Logger) SetLevel(level string) {
 	}
 }
 
-func (l *Logger) SetOutput(output io.Writer) {
+func (l *Lrus) SetOutput(output io.Writer) {
 	l.Log.SetOutput(output)
 }
 
-func (l *Logger) Info(msg string) {
+func (l *Lrus) Info(msg string) {
 	l.Log.Infoln(msg)
 }
 
-func (l *Logger) Error(msg string) {
+func (l *Lrus) Error(msg string) {
 	l.Log.Error(msg)
 }
 
-func (l *Logger) Debug(msg string) {
+func (l *Lrus) Debug(msg string) {
 	l.Log.Debug(msg)
 }
 
-func (l *Logger) Warn(msg string) {
+func (l *Lrus) Warn(msg string) {
 	l.Log.Warn(msg)
 }

@@ -8,7 +8,6 @@ import (
 type Storage interface {
 	Connect(ctx context.Context, dsn string) error
 	Close() error
-	IsExist(id string) (bool, error)
-	Create(d model.Order) error
-	Get(id string) (model.Order, error)
+	CreateOrder(d model.Order) error
+	GetOrder(id string) (*model.Order, error)
 }

@@ -3,9 +3,11 @@ package storage
 import "errors"
 
 var (
-	ErrorExist error
+	ErrorOrderExist    error
+	ErrorDeliveryExist error
 )
 
 func init() {
-	ErrorExist = errors.New("order already exist")
+	ErrorOrderExist = errors.New("order already exist")
+	ErrorDeliveryExist = errors.New("delivery already exist")
 }
