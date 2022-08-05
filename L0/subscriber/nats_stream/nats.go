@@ -46,7 +46,7 @@ func (n *NatsStream) MsgHandler(msg *stan.Msg) {
 	n.App.Log.Info(s)
 }
 
-func (n *NatsStream) Start() {
+func (n *NatsStream) Start(stopChan chan struct{}) {
 	var err error
 
 	// Connect Options.
@@ -113,7 +113,7 @@ func (n *NatsStream) Start() {
 	if n.ShowTime {
 		log.SetFlags(log.LstdFlags) //TODO
 	}
-	cleanupDone := make(chan bool)
+	//cleanupDone := make(chan bool)
 
 	/*	// Wait for a SIGINT (perhaps triggered by user with CTRL-C)
 		// Run cleanup when signal is received
@@ -132,7 +132,7 @@ func (n *NatsStream) Start() {
 			}
 		}()
 		<-cleanupDone*/
-	<-cleanupDone
+	<-stopChan
 }
 
 func (n *NatsStream) Stop() {

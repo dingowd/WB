@@ -1,6 +1,6 @@
 package subscriber
 
 type Subscriber interface {
-	Start()
+	Start(stopChan chan struct{})
 	Stop()
 }

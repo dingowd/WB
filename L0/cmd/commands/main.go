@@ -8,11 +8,15 @@ import (
 	с "github.com/dingowd/WB/L0/cache"
 	"github.com/dingowd/WB/L0/config"
 	"github.com/dingowd/WB/L0/logger/lrus"
+	"github.com/dingowd/WB/L0/server"
 	"github.com/dingowd/WB/L0/storage"
 	"github.com/dingowd/WB/L0/storage/postgres"
 	"github.com/dingowd/WB/L0/subscriber"
 	natsstream "github.com/dingowd/WB/L0/subscriber/nats_stream"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -65,9 +69,35 @@ func main() {
 	app := app.New(logg, store, cache)
 	conf.Subscriber.App = app
 
+	// init http server
+	server := server.NewServer(*app, conf.HTTPSrv)
+
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
+
+	stopChan := make(chan struct{})
+
+	go func() {
+		<-ctx.Done()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		defer cancel()
+
+		if err := server.Stop(ctx); err != nil {
+			logg.Error("failed to stop http server: " + err.Error())
+		}
+		stopChan <- struct{}{}
+	}()
+	if err := server.Start(ctx); err != nil {
+		logg.Error("failed to start http server: " + err.Error())
+		cancel()
+		os.Exit(1)
+	}
+
 	//init subscriber
 	var sub subscriber.Subscriber
 	sub = natsstream.NewSub(conf.Subscriber)
-	sub.Start()
+	sub.Start(stopChan)
 
 }
