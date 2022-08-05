@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dingowd/WB/L0/app"
+	с "github.com/dingowd/WB/L0/cache"
 	"github.com/dingowd/WB/L0/config"
 	"github.com/dingowd/WB/L0/logger/lrus"
 	"github.com/dingowd/WB/L0/storage"
@@ -19,7 +20,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "C:/Users/dingowd/go/WB/L0/config/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "./L0/config/config.toml", "Path to configuration file")
 }
 
 /*type app struct {
@@ -29,15 +30,12 @@ func init() {
 }*/
 
 func main() {
-	/*	flag.Parse()
-		var a app*/
 	// Init config
 	conf := config.NewConfig()
 	if _, err := toml.DecodeFile(configFile, &conf); err != nil {
 		fmt.Fprintln(os.Stdout, "error decoding toml "+err.Error()+" setting default values")
 		conf = config.Default()
 	}
-	_ = fmt.Sprint(123)
 	// init logger
 	logg := lrus.New()
 	logg.SetLevel(conf.Logger.Level)
@@ -58,8 +56,13 @@ func main() {
 	store.Connect(context.Background(), conf.DSN)
 	defer store.Close()
 
+	// Init cache
+	var cache с.CacheInterface
+	cache = с.NewCache(logg, store, conf.Cache.Size)
+	cache.Init()
+
 	// Init app
-	app := app.New(logg, store)
+	app := app.New(logg, store, cache)
 	conf.Subscriber.App = app
 
 	//init subscriber

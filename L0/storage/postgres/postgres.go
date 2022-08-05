@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/dingowd/WB/L0/logger"
 	"github.com/dingowd/WB/L0/model"
 	"github.com/dingowd/WB/L0/storage"
 	"github.com/jmoiron/sqlx"
+	"time"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
@@ -63,7 +65,7 @@ func (s *Storage) CreateOrder(d model.Order) error {
 	return nil
 }
 
-func (s *Storage) GetOrder(id string) (*model.Order, error) {
+func (s *Storage) GetOrder(id string) (model.Order, error) {
 	query := "select order_uid, track_number, entry, " +
 		"name, phone, zip, city, address, region, email, " +
 		"request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee, " +
@@ -72,14 +74,15 @@ func (s *Storage) GetOrder(id string) (*model.Order, error) {
 		"from orders " +
 		"inner join delivery on orders.delivery_id = delivery.id " +
 		"inner join payment on orders.transaction = payment.transaction " +
-		"where order_uid = $1"
+		"where order_uid = :id"
 	var order model.Order
-	rows, err := s.DB.NamedQuery(query, id)
+	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"id": id})
 	if err != nil {
 		msg := "Error to get order with ID " + err.Error()
 		s.Log.Error(msg)
-		return nil, err
+		return order, err
 	}
+	defer rows.Close()
 	fromDB := make([]model.DbOrderNoItems, 0)
 	for rows.Next() {
 		var elem model.DbOrderNoItems
@@ -87,7 +90,7 @@ func (s *Storage) GetOrder(id string) (*model.Order, error) {
 		if err != nil {
 			msg := "Error to get order with ID " + err.Error()
 			s.Log.Error(msg)
-			return nil, err
+			return order, err
 		}
 		fromDB = append(fromDB, elem)
 	}
@@ -120,7 +123,7 @@ func (s *Storage) GetOrder(id string) (*model.Order, error) {
 	order.DateCreated = e.DateCreated
 	order.OofShard = e.OofShard
 	order.Items, err = s.GetItems(order.OrderUid)
-	return &order, nil
+	return order, nil
 }
 
 func (s *Storage) IsOrderExist(id string) (bool, error) {
@@ -205,10 +208,11 @@ func (s *Storage) IsItemExist(id string, i model.Item) bool {
 }
 
 func (s *Storage) GetItems(id string) ([]model.Item, error) {
-	query := "select chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status " +
-		"from items where id = $1"
+	id = "b563feb7b2b84b6test"
+	query := `select chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status ` +
+		`from items where order_uid = :id`
 	items := make([]model.Item, 0)
-	rows, err := s.DB.NamedQuery(query, id)
+	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"id": id})
 	if err != nil {
 		return items, err
 	}
@@ -221,4 +225,70 @@ func (s *Storage) GetItems(id string) ([]model.Item, error) {
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
+	query := `select order_uid, track_number, entry,
+		name, phone, zip, city, address, region, email,
+		request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee,
+		locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created,
+		oof_shard, delivery_id, orders.transaction as transaction
+		from orders
+		inner join delivery on orders.delivery_id = delivery.id
+		inner join payment on orders.transaction = payment.transaction
+		limit :limit`
+	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"limit": a})
+	if err != nil {
+		msg := fmt.Sprint("Error to get orders with limit ", a, err.Error())
+		s.Log.Error(msg)
+		return nil, err
+	}
+	defer rows.Close()
+	//fromDB := make([]model.DbOrderNoItems, 0)
+	out := make(model.CacheOrderList, 0)
+	i := 0
+	for rows.Next() && i < a {
+		var e model.DbOrderNoItems
+		var order model.CacheOrder
+		err := rows.StructScan(&e)
+		if err != nil {
+			msg := "Error to get order with ID " + err.Error()
+			s.Log.Error(msg)
+			return nil, err
+		}
+		order.Order.OrderUid = e.OrderUid
+		order.Order.TrackNumber = e.TrackNumber
+		order.Order.Entry = e.Entry
+		order.Order.Delivery.Name = e.Name
+		order.Order.Delivery.Phone = e.Phone
+		order.Order.Delivery.Zip = e.Zip
+		order.Order.Delivery.City = e.City
+		order.Order.Delivery.Address = e.Address
+		order.Order.Delivery.Region = e.Region
+		order.Order.Delivery.Email = e.Email
+		order.Order.Payment.Transaction = e.Transaction
+		order.Order.Payment.RequestId = e.RequestId
+		order.Order.Payment.Currency = e.Currency
+		order.Order.Payment.Amount = e.Amount
+		order.Order.Payment.PaymentDt = e.PaymentDt
+		order.Order.Payment.Bank = e.Bank
+		order.Order.Payment.DeliveryCost = e.DeliveryCost
+		order.Order.Payment.GoodsTotal = e.GoodsTotal
+		order.Order.Payment.CustomFee = e.CustomFee
+		order.Order.Locale = e.Locale
+		order.Order.InternalSignature = e.InternalSignature
+		order.Order.CustomerId = e.CustomerId
+		order.Order.DeliveryService = e.DeliveryService
+		order.Order.Shardkey = e.Shardkey
+		order.Order.SmId = e.SmId
+		order.Order.DateCreated = e.DateCreated
+		order.Order.OofShard = e.OofShard
+		order.Order.Items = make([]model.Item, 0)
+		items, _ := s.GetItems(order.Order.OrderUid)
+		order.Order.Items = append(order.Order.Items, items...)
+		order.TimeStamp = time.Now().UnixNano()
+		out = append(out, order)
+		i++
+	}
+	return out, nil
 }

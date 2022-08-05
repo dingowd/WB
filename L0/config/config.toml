@@ -3,7 +3,7 @@ httpsrv = "127.0.0.1:3541"
 
 [logger]
 level = "INFO"
-logfile = "./log.txt"
+logfile = "./L0/log.txt"
 
 [subscriber]
 clusterid = "WB_Cluster"
