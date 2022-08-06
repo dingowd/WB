@@ -7,10 +7,9 @@ import (
 	"github.com/dingowd/WB/L0/logger"
 	"github.com/dingowd/WB/L0/model"
 	"github.com/dingowd/WB/L0/storage"
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 	"time"
-
-	_ "github.com/jackc/pgx/stdlib"
 )
 
 type Storage struct {
@@ -26,9 +25,9 @@ func (s *Storage) Connect(ctx context.Context, dsn string) error {
 	var err error
 	s.DB, err = sqlx.Open("pgx", dsn)
 	if err == nil {
-		s.Log.Info("Connected to " + dsn)
+		s.Log.Info("База " + dsn + " подключена")
 	} else {
-		s.Log.Error("Failed to connect database")
+		s.Log.Error("Ошибка соединения с базой. Проверьте параметры подключения")
 	}
 	return err
 }
@@ -38,29 +37,51 @@ func (s *Storage) Close() error {
 }
 
 func (s *Storage) CreateOrder(d model.Order) error {
-	msg := "Creating order with ID " + d.OrderUid
+	msg := "Создаём заказ с ID " + d.OrderUid
 	s.Log.Info(msg)
-	exist, _ := s.IsOrderExist(d.OrderUid)
-	if exist {
-		msg = "Order with ID " + d.OrderUid + " already exist. Order creation error."
-		s.Log.Info(msg)
+	var err error
+	var exist bool
+
+	if s.IsOrderExist(d.OrderUid) {
+		s.Log.Error(storage.ErrorOrderExist.Error() + d.OrderUid)
 		return storage.ErrorOrderExist
 	}
-	var deliveryID int
-	if exist, deliveryID, _ = s.IsDeliveryExist(d.Delivery); !exist {
-		deliveryID, _ = s.CreateDelivery(d.Delivery)
+	// создание оплаты
+	if s.IsPaymentExist(d.Payment) {
+		msg = "Транзакция " + d.Payment.Transaction + " уже существует. Каждому заказу соответствует только своя транзакция. Ошибка создания заказа."
+		s.Log.Error(msg)
+		return storage.ErrorPaymentExist
+	} else {
+		err = s.CreatePayment(d.Payment)
+		if err != nil {
+			s.Log.Error(storage.ErrorPaymentCreate.Error() + d.Payment.Transaction)
+			return storage.ErrorPaymentCreate
+		}
 	}
-	err := s.CreatePayment(d.Payment)
+	// создание доставки
+	var deliveryID int
+	if exist, deliveryID = s.IsDeliveryExist(d.Delivery); !exist {
+		deliveryID, err = s.CreateDelivery(d.Delivery)
+		if err != nil {
+			s.Log.Error(storage.ErrorDeliveryCreate.Error())
+			return storage.ErrorDeliveryCreate
+		}
+	}
+
+	// создание товаров
+	if err = s.CreateItems(d.OrderUid, d.Items); err != nil {
+		return err
+	}
+	// создание заказа
 	query := "insert into orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, " +
 		"shardkey, sm_id, date_created, oof_shard, delivery_id, transaction) " +
 		"values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)"
 	_, err = s.DB.Exec(query, d.OrderUid, d.TrackNumber, d.Entry, d.Locale, d.InternalSignature, d.CustomerId, d.DeliveryService,
 		d.Shardkey, d.SmId, d.DateCreated, d.OofShard, deliveryID, d.Payment.Transaction)
-	err = s.CreateItems(d.OrderUid, d.Items)
 	if err != nil {
 		return err
 	}
-	msg = "Successful creation of the order with ID " + d.OrderUid
+	msg = "Заказ с ID " + d.OrderUid + " успешно создан"
 	s.Log.Info(msg)
 	return nil
 }
@@ -78,7 +99,7 @@ func (s *Storage) GetOrder(id string) (model.Order, error) {
 	var order model.Order
 	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"id": id})
 	if err != nil {
-		msg := "Error to get order with ID " + err.Error()
+		msg := "Ошибка получения заказа с ID " + err.Error()
 		s.Log.Error(msg)
 		return order, err
 	}
@@ -88,69 +109,57 @@ func (s *Storage) GetOrder(id string) (model.Order, error) {
 		var elem model.DbOrderNoItems
 		err := rows.StructScan(&elem)
 		if err != nil {
-			msg := "Error to get order with ID " + err.Error()
+			msg := "Ошибка получения заказа с ID " + err.Error()
 			s.Log.Error(msg)
 			return order, err
 		}
 		fromDB = append(fromDB, elem)
 	}
 	e := fromDB[0]
-	order.OrderUid = e.OrderUid
-	order.TrackNumber = e.TrackNumber
-	order.Entry = e.Entry
-	order.Delivery.Name = e.Name
-	order.Delivery.Phone = e.Phone
-	order.Delivery.Zip = e.Zip
-	order.Delivery.City = e.City
-	order.Delivery.Address = e.Address
-	order.Delivery.Region = e.Region
-	order.Delivery.Email = e.Email
-	order.Payment.Transaction = e.Transaction
-	order.Payment.RequestId = e.RequestId
-	order.Payment.Currency = e.Currency
-	order.Payment.Amount = e.Amount
-	order.Payment.PaymentDt = e.PaymentDt
-	order.Payment.Bank = e.Bank
-	order.Payment.DeliveryCost = e.DeliveryCost
-	order.Payment.GoodsTotal = e.GoodsTotal
-	order.Payment.CustomFee = e.CustomFee
-	order.Locale = e.Locale
-	order.InternalSignature = e.InternalSignature
-	order.CustomerId = e.CustomerId
-	order.DeliveryService = e.DeliveryService
-	order.Shardkey = e.Shardkey
-	order.SmId = e.SmId
-	order.DateCreated = e.DateCreated
-	order.OofShard = e.OofShard
+	order = s.exchange(e)
 	order.Items, err = s.GetItems(order.OrderUid)
 	return order, nil
 }
 
-func (s *Storage) IsOrderExist(id string) (bool, error) {
+func (s *Storage) IsOrderExist(id string) bool {
 	query := "select order_uid from orders where order_uid = $1"
 	row := s.DB.QueryRow(query, id)
 	var orderId string
 	err := row.Scan(&orderId)
 	if err == sql.ErrNoRows {
-		return false, nil
+		return false
 	} else if err != nil {
-		return false, err
+		return false
 	} else {
-		return true, nil
+		return true
 	}
 }
 
-func (s *Storage) IsDeliveryExist(d model.Delivery) (bool, int, error) {
+func (s *Storage) IsDeliveryExist(d model.Delivery) (bool, int) {
 	query := "select id from delivery where name = $1 and phone = $2 and zip = $3 and city = $4 and address = $5 and region = $6 and email = $7"
 	row := s.DB.QueryRow(query, d.Name, d.Phone, d.Zip, d.City, d.Address, d.Region, d.Email)
 	var orderId int
 	err := row.Scan(&orderId)
 	if err == sql.ErrNoRows {
-		return false, 0, nil
+		return false, 0
 	} else if err != nil {
-		return false, 0, err
+		return false, 0
 	} else {
-		return true, orderId, nil
+		return true, orderId
+	}
+}
+
+func (s *Storage) IsPaymentExist(d model.Payment) bool {
+	query := "select transaction from payment where transaction = $1"
+	row := s.DB.QueryRow(query, d.Transaction)
+	var transaction string
+	err := row.Scan(&transaction)
+	if err == sql.ErrNoRows {
+		return false
+	} else if err != nil {
+		return false
+	} else {
+		return true
 	}
 }
 
@@ -162,7 +171,7 @@ func (s *Storage) CreateDelivery(d model.Delivery) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	_, id, err = s.IsDeliveryExist(d)
+	_, id = s.IsDeliveryExist(d)
 	return id, err
 }
 
@@ -180,6 +189,9 @@ func (s *Storage) CreateItems(id string, i []model.Item) error {
 	query := "insert into items (chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status, order_uid) " +
 		"values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)"
 	for _, val := range i {
+		if s.IsItemIDExist(val.ChrtId) {
+			return storage.ErrorItemIDExist
+		}
 		if !s.IsItemExist(id, val) {
 			_, err = s.DB.Exec(query, val.ChrtId, val.TrackNumber, val.Price, val.Rid, val.Name, val.Sale, val.Size,
 				val.TotalPrice, val.NmId, val.Brand, val.Status, id)
@@ -196,6 +208,20 @@ func (s *Storage) IsItemExist(id string, i model.Item) bool {
 		"and sale = $6 and size = $7 and total_price = $8 and nm_id = $9 and brand = $10 and status = $11 and order_uid = $12"
 	row := s.DB.QueryRow(query, i.ChrtId, i.TrackNumber, i.Price, i.Rid, i.Name, i.Sale, i.Size, i.TotalPrice, i.NmId, i.Brand,
 		i.Status, id)
+	var orderId int
+	err := row.Scan(&orderId)
+	if err == sql.ErrNoRows {
+		return false
+	} else if err != nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+func (s *Storage) IsItemIDExist(id int) bool {
+	query := "select chrt_id from items where chrt_id = $1"
+	row := s.DB.QueryRow(query, id)
 	var orderId int
 	err := row.Scan(&orderId)
 	if err == sql.ErrNoRows {
@@ -239,12 +265,11 @@ func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
 		limit :limit`
 	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"limit": a})
 	if err != nil {
-		msg := fmt.Sprint("Error to get orders with limit ", a, err.Error())
+		msg := fmt.Sprint("Ошибка получения заказов объемом ", a, err.Error())
 		s.Log.Error(msg)
 		return nil, err
 	}
 	defer rows.Close()
-	//fromDB := make([]model.DbOrderNoItems, 0)
 	out := make(model.CacheOrderList, 0)
 	i := 0
 	for rows.Next() && i < a {
@@ -252,37 +277,11 @@ func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
 		var order model.CacheOrder
 		err := rows.StructScan(&e)
 		if err != nil {
-			msg := "Error to get order with ID " + err.Error()
+			msg := "Ошибка получения заказа с ID " + err.Error()
 			s.Log.Error(msg)
 			return nil, err
 		}
-		order.Order.OrderUid = e.OrderUid
-		order.Order.TrackNumber = e.TrackNumber
-		order.Order.Entry = e.Entry
-		order.Order.Delivery.Name = e.Name
-		order.Order.Delivery.Phone = e.Phone
-		order.Order.Delivery.Zip = e.Zip
-		order.Order.Delivery.City = e.City
-		order.Order.Delivery.Address = e.Address
-		order.Order.Delivery.Region = e.Region
-		order.Order.Delivery.Email = e.Email
-		order.Order.Payment.Transaction = e.Transaction
-		order.Order.Payment.RequestId = e.RequestId
-		order.Order.Payment.Currency = e.Currency
-		order.Order.Payment.Amount = e.Amount
-		order.Order.Payment.PaymentDt = e.PaymentDt
-		order.Order.Payment.Bank = e.Bank
-		order.Order.Payment.DeliveryCost = e.DeliveryCost
-		order.Order.Payment.GoodsTotal = e.GoodsTotal
-		order.Order.Payment.CustomFee = e.CustomFee
-		order.Order.Locale = e.Locale
-		order.Order.InternalSignature = e.InternalSignature
-		order.Order.CustomerId = e.CustomerId
-		order.Order.DeliveryService = e.DeliveryService
-		order.Order.Shardkey = e.Shardkey
-		order.Order.SmId = e.SmId
-		order.Order.DateCreated = e.DateCreated
-		order.Order.OofShard = e.OofShard
+		order.Order = s.exchange(e)
 		order.Order.Items = make([]model.Item, 0)
 		items, _ := s.GetItems(order.Order.OrderUid)
 		order.Order.Items = append(order.Order.Items, items...)
@@ -291,4 +290,36 @@ func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
 		i++
 	}
 	return out, nil
+}
+
+func (s *Storage) exchange(e model.DbOrderNoItems) model.Order {
+	var order model.Order
+	order.OrderUid = e.OrderUid
+	order.TrackNumber = e.TrackNumber
+	order.Entry = e.Entry
+	order.Delivery.Name = e.Name
+	order.Delivery.Phone = e.Phone
+	order.Delivery.Zip = e.Zip
+	order.Delivery.City = e.City
+	order.Delivery.Address = e.Address
+	order.Delivery.Region = e.Region
+	order.Delivery.Email = e.Email
+	order.Payment.Transaction = e.Transaction
+	order.Payment.RequestId = e.RequestId
+	order.Payment.Currency = e.Currency
+	order.Payment.Amount = e.Amount
+	order.Payment.PaymentDt = e.PaymentDt
+	order.Payment.Bank = e.Bank
+	order.Payment.DeliveryCost = e.DeliveryCost
+	order.Payment.GoodsTotal = e.GoodsTotal
+	order.Payment.CustomFee = e.CustomFee
+	order.Locale = e.Locale
+	order.InternalSignature = e.InternalSignature
+	order.CustomerId = e.CustomerId
+	order.DeliveryService = e.DeliveryService
+	order.Shardkey = e.Shardkey
+	order.SmId = e.SmId
+	order.DateCreated = e.DateCreated
+	order.OofShard = e.OofShard
+	return order
 }

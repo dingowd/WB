@@ -9,7 +9,7 @@ import (
 
 type CacheInterface interface {
 	Init()
-	ReadFromCache(id string) model.CacheOrder
+	ReadFromCache(id string) (*model.CacheOrder, error)
 }
 
 type Cache struct {
@@ -29,30 +29,42 @@ func NewCache(log logger.Logger, stor storage.Storage, a int) *Cache {
 }
 
 func (c *Cache) Init() {
-	var err error
-	//c.Body = make(model.CacheOrderList, 0)
-	c.Body, err = c.Stor.GetOrdersByLimit(c.Amount)
-	if err != nil {
-		c.Log.Error("Unable to fill cache " + err.Error())
-	}
+	c.Body, _ = c.Stor.GetOrdersByLimit(c.Amount)
 }
 
-func (c *Cache) ReadFromCache(id string) model.CacheOrder {
+func (c *Cache) ReadFromCache(id string) (*model.CacheOrder, error) {
 	for i := 0; i < len(c.Body); i++ {
 		if id == c.Body[i].Order.OrderUid {
 			c.Body[i].TimeStamp = time.Now().UnixNano()
-			return c.Body[i]
+			return &c.Body[i], nil
 		}
 	}
-	min := c.Body[0].TimeStamp
+	var err error
 	key := 0
-	for i := 1; i < len(c.Body); i++ {
-		if c.Body[i].TimeStamp < min {
-			min = c.Body[i].TimeStamp
-			key = i
+	if len(c.Body) == c.Amount {
+		min := c.Body[0].TimeStamp
+		for i := 1; i < len(c.Body); i++ {
+			if c.Body[i].TimeStamp < min {
+				min = c.Body[i].TimeStamp
+				key = i
+			}
 		}
+		c.Body[key].Order, err = c.Stor.GetOrder(id)
+		if err != nil {
+			return nil, err
+		}
+		c.Body[key].TimeStamp = time.Now().UnixNano()
+		return &c.Body[key], nil
+	} else {
+		var o model.Order
+		var b model.CacheOrder
+		o, err = c.Stor.GetOrder(id)
+		if err != nil {
+			return nil, err
+		}
+		b.Order = o
+		b.TimeStamp = time.Now().UnixNano()
+		c.Body = append(c.Body, b)
 	}
-	c.Body[key].Order, _ = c.Stor.GetOrder(id)
-	c.Body[key].TimeStamp = time.Now().UnixNano()
-	return c.Body[key]
+	return &c.Body[len(c.Body)-1], nil
 }

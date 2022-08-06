@@ -33,7 +33,10 @@ func (s *Server) GetOrder(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("id is missing!!!"))
 		return
 	}
-	order := s.App.Cache.ReadFromCache(id)
+	order, err := s.App.Cache.ReadFromCache(id)
+	if err != nil {
+		w.Write([]byte(err.Error()))
+	}
 	b, _ := json.Marshal(order)
 	w.Write(b)
 }
