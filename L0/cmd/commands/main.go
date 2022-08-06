@@ -27,12 +27,6 @@ func init() {
 	flag.StringVar(&configFile, "config", "./L0/config/config.toml", "Path to configuration file")
 }
 
-/*type app struct {
-	Log logger.Logger
-	Stor storage.Storage
-	Prov provider.MessageProvider
-}*/
-
 func main() {
 	// Init config
 	conf := config.NewConfig()
@@ -99,5 +93,4 @@ func main() {
 	var sub subscriber.Subscriber
 	sub = natsstream.NewSub(conf.Subscriber)
 	sub.Start(stopChan)
-
 }
