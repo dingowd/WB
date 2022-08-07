@@ -51,7 +51,10 @@ func main() {
 		os.Exit(1) // nolint:gocritic
 	}
 	store.Connect(context.Background(), conf.DSN)
-	defer store.Close()
+	defer func() {
+		logg.Info("Закрытие соединения с БД")
+		store.Close()
+	}()
 
 	// Init cache
 	var cache с.CacheInterface

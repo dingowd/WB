@@ -33,6 +33,7 @@ func (s *Storage) Connect(ctx context.Context, dsn string) error {
 }
 
 func (s *Storage) Close() error {
+	s.Log.Info("Закрытие соединения с БД")
 	return s.DB.Close()
 }
 
