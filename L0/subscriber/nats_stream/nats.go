@@ -41,12 +41,15 @@ func NewSub(s NatsStream) *NatsStream {
 func (n *NatsStream) MsgHandler(msg *stan.Msg) {
 	var o model.Order
 	json.Unmarshal(msg.Data, &o)
-	n.App.Store.CreateOrder(o)
 	s := fmt.Sprintln("Received: ", o)
 	n.App.Log.Info(s)
+	err := n.App.Store.CreateOrder(o)
+	if err != nil {
+		n.App.Log.Info(err.Error())
+	}
 }
 
-func (n *NatsStream) Start(stopChan chan struct{}) {
+func (n *NatsStream) Start() {
 	var err error
 
 	// Connect Options.
@@ -132,7 +135,6 @@ func (n *NatsStream) Start(stopChan chan struct{}) {
 			}
 		}()
 		<-cleanupDone*/
-	<-stopChan
 }
 
 func (n *NatsStream) Stop() {

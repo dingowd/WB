@@ -57,6 +57,8 @@ func (s *Storage) CreateOrder(d model.Order) error {
 			s.Log.Error(storage.ErrorPaymentCreate.Error() + d.Payment.Transaction)
 			return storage.ErrorPaymentCreate
 		}
+		msg := fmt.Sprint("Транзакция с ID ", d.Payment.Transaction, " успешно создана")
+		s.Log.Info(msg)
 	}
 	// создание доставки
 	var deliveryID int
@@ -66,11 +68,8 @@ func (s *Storage) CreateOrder(d model.Order) error {
 			s.Log.Error(storage.ErrorDeliveryCreate.Error())
 			return storage.ErrorDeliveryCreate
 		}
-	}
-
-	// создание товаров
-	if err = s.CreateItems(d.OrderUid, d.Items); err != nil {
-		return err
+		msg := fmt.Sprint("Доставка с ID ", deliveryID, " успешно создана")
+		s.Log.Info(msg)
 	}
 	// создание заказа
 	query := "insert into orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, " +
@@ -83,6 +82,10 @@ func (s *Storage) CreateOrder(d model.Order) error {
 	}
 	msg = "Заказ с ID " + d.OrderUid + " успешно создан"
 	s.Log.Info(msg)
+	// создание товаров
+	if err = s.CreateItems(d.OrderUid, d.Items); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -234,7 +237,6 @@ func (s *Storage) IsItemIDExist(id int) bool {
 }
 
 func (s *Storage) GetItems(id string) ([]model.Item, error) {
-	id = "b563feb7b2b84b6test"
 	query := `select chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status ` +
 		`from items where order_uid = :id`
 	items := make([]model.Item, 0)
@@ -262,8 +264,8 @@ func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
 		from orders
 		inner join delivery on orders.delivery_id = delivery.id
 		inner join payment on orders.transaction = payment.transaction
-		limit :limit`
-	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"limit": a})
+		limit :amount`
+	rows, err := s.DB.NamedQuery(query, map[string]interface{}{"amount": a})
 	if err != nil {
 		msg := fmt.Sprint("Ошибка получения заказов объемом ", a, err.Error())
 		s.Log.Error(msg)
@@ -282,9 +284,7 @@ func (s *Storage) GetOrdersByLimit(a int) (model.CacheOrderList, error) {
 			return nil, err
 		}
 		order.Order = s.exchange(e)
-		order.Order.Items = make([]model.Item, 0)
-		items, _ := s.GetItems(order.Order.OrderUid)
-		order.Order.Items = append(order.Order.Items, items...)
+		order.Order.Items, err = s.GetItems(order.Order.OrderUid)
 		order.TimeStamp = time.Now().UnixNano()
 		out = append(out, order)
 		i++

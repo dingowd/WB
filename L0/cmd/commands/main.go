@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/dingowd/WB/L0/app"
 	с "github.com/dingowd/WB/L0/cache"
 	"github.com/dingowd/WB/L0/config"
@@ -16,9 +17,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	"github.com/BurntSushi/toml"
 )
 
 var configFile string
@@ -63,34 +61,23 @@ func main() {
 	app := app.New(logg, store, cache)
 	conf.Subscriber.App = app
 
-	// init http server
-	server := server.NewServer(*app, conf.HTTPSrv)
-
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
-
-	stopChan := make(chan struct{})
-
-	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
-		}
-		stopChan <- struct{}{}
-	}()
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1)
-	}
-
 	//init subscriber
 	var sub subscriber.Subscriber
-	sub = natsstream.NewSub(conf.Subscriber)
-	sub.Start(stopChan)
+	go func() {
+		sub = natsstream.NewSub(conf.Subscriber)
+		sub.Start()
+	}()
+
+	server := server.NewServer(app, conf.HTTPSrv)
+
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-exit
+		sub.Stop()
+		server.Srv.Close()
+	}()
+
+	// init http server
+	server.Start()
 }
