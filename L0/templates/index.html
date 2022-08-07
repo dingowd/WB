@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Заказ {{ .OrderUid}}</title>
+</head>
+<body>
+<h1>OrderUid {{ .OrderUid}}</h1>
+<p><b>TrackNumber: </b>{{ .TrackNumber}}</p>
+<p><b>Entry: </b>{{ .Entry}}</p>
+<p><b>Delivery</b></p>
+<li><b>Name: </b>{{ .Delivery.Name}}</li>
+<li><b>Phone: </b>{{ .Delivery.Phone}}</li>
+<li><b>Zip: </b>{{ .Delivery.Zip}}</li>
+<li><b>City: </b>{{ .Delivery.City}}</li>
+<li><b>Address: </b>{{ .Delivery.Address}}</li>
+<li><b>Region: </b>{{ .Delivery.Region}}</li>
+<li><b>Email: </b>{{ .Delivery.Email}}</li>
+<p><b>Payment</b></p>
+<li><b>Transaction: </b>{{ .Payment.Transaction}}</li>
+<li><b>RequestId: </b>{{ .Payment.RequestId}}</li>
+<li><b>Currency: </b>{{ .Payment.Currency}}</li>
+<li><b>Provider: </b>{{ .Payment.Provider}}</li>
+<li><b>Amount: </b>{{ .Payment.Amount}}</li>
+<li><b>PaymentDt: </b>{{ .Payment.PaymentDt}}</li>
+<li><b>Bank: </b>{{ .Payment.Bank}}</li>
+<li><b>DeliveryCost: </b>{{ .Payment.DeliveryCost}}</li>
+<li><b>GoodsTotal: </b>{{ .Payment.GoodsTotal}}</li>
+<li><b>CustomFee: </b>{{ .Payment.CustomFee}}</li>
+<p><b>Items</b></p>
+<ul>
+    {{range .Items}}
+    <p><b>Item</b></p>
+    <li><b>{{ .ChrtId}}</b></li>
+    <li><b>{{ .TrackNumber}}</b></li>
+    <li><b>{{ .Price}}</b></li>
+    <li><b>{{ .Rid}}</b></li>
+    <li><b>{{ .Name}}</b></li>
+    <li><b>{{ .Sale}}</b></li>
+    <li><b>{{ .Size}}</b></li>
+    <li><b>{{ .TotalPrice}}</b></li>
+    <li><b>{{ .NmId}}</b></li>
+    <li><b>{{ .Brand}}</b></li>
+    <li><b>{{ .Status}}</b></li>
+    {{end}}
+</ul>
+<p><b>Locale: </b>{{ .Locale}}</p>
+<p><b>InternalSignature: </b>{{ .InternalSignature}}</p>
+<p><b>CustomerId: </b>{{ .CustomerId}}</p>
+<p><b>DeliveryService: </b>{{ .DeliveryService}}</p>
+<p><b>Shardkey: </b>{{ .Shardkey}}</p>
+<p><b>SmId: </b>{{ .SmId}}</p>
+<p><b>DateCreated: </b>{{ .DateCreated}}</p>
+<p><b>OofShard: </b>{{ .OofShard}}</p>
+</body>
+</html>

@@ -1,9 +1,8 @@
 package server
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/dingowd/WB/L0/app"
+	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -33,10 +32,12 @@ func (s *Server) GetOrder(w http.ResponseWriter, r *http.Request) {
 		s.App.Log.Error(msg)
 		return
 	}
-	b, _ := json.Marshal(order)
-	msg := fmt.Sprint(order)
-	s.App.Log.Info(msg)
-	w.Write(b)
+	tmpl, _ := template.ParseFiles("./L0/templates/index.html")
+	tmpl.Execute(w, order.Order)
+	/*	b, _ := json.Marshal(order)
+		msg := fmt.Sprint(order)
+		s.App.Log.Info(msg)
+		w.Write(b)*/
 }
 
 func (s *Server) Start() error {
