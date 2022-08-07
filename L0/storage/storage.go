@@ -11,4 +11,5 @@ type Storage interface {
 	CreateOrder(d model.Order) error
 	GetOrder(id string) (model.Order, error)
 	GetOrdersByLimit(a int) (model.CacheOrderList, error)
+	IsOrderExist(id string) bool
 }

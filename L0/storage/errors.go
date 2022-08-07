@@ -9,6 +9,7 @@ var (
 	ErrorDeliveryCreate error
 	ErrorPaymentCreate  error
 	ErrorItemIDExist    error
+	ErrorOrderNotExist  error
 )
 
 func init() {
@@ -18,4 +19,5 @@ func init() {
 	ErrorDeliveryCreate = errors.New("ошибка создания доставки")
 	ErrorPaymentCreate = errors.New("ошибка создания оплаты")
 	ErrorItemIDExist = errors.New("ошибка. товар с таким ID уже существует")
+	ErrorOrderNotExist = errors.New("ошибка. заказ не существует")
 }

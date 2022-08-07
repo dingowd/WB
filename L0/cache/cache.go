@@ -58,6 +58,9 @@ func (c *Cache) ReadFromCache(id string) (*model.CacheOrder, error) {
 	} else {
 		var o model.Order
 		var b model.CacheOrder
+		if !c.Stor.IsOrderExist(id) {
+			return nil, storage.ErrorOrderNotExist
+		}
 		o, err = c.Stor.GetOrder(id)
 		if err != nil {
 			return nil, err

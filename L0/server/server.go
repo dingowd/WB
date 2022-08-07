@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dingowd/WB/L0/app"
 	"net/http"
 
@@ -27,9 +28,14 @@ func (s *Server) GetOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	order, err := s.App.Cache.ReadFromCache(id)
 	if err != nil {
-		w.Write([]byte(err.Error()))
+		msg := err.Error() + " " + id
+		w.Write([]byte(msg))
+		s.App.Log.Error(msg)
+		return
 	}
 	b, _ := json.Marshal(order)
+	msg := fmt.Sprint(order)
+	s.App.Log.Info(msg)
 	w.Write(b)
 }
 
