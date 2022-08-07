@@ -56,7 +56,7 @@ func Default() *Config {
 			StartSeq:    0,
 			StartDelta:  "",
 			DeliverAll:  true,
-			NewOnly:     false,
+			NewOnly:     true,
 			DeliverLast: false,
 			Durable:     "",
 			Subj:        "order",

@@ -67,16 +67,16 @@ func (n *NatsStream) Start() {
 	//defer nc.Close()
 	n.SC, err = stan.Connect(n.ClusterID, n.ClientID, stan.NatsConn(n.NC),
 		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
-			s := fmt.Sprintf("Connection lost, reason: %v", reason)
+			s := fmt.Sprintf("Соединение потеряно, причина: %v", reason)
 			n.App.Log.Error(s)
 			os.Exit(1)
 		}))
 	if err != nil {
-		s := fmt.Sprintf("Can't connect: %v.\nMake sure a NATS Streaming Server is running at: %s", err, n.URL)
+		s := fmt.Sprintf("Невозможно установить соединение: %v.\nПроверьте, что NATS Streaming Server запущен по адресу: %s", err, n.URL)
 		n.App.Log.Error(s)
 		os.Exit(1)
 	}
-	s := fmt.Sprintf("Connected to %s clusterID: [%s] clientID: [%s]\n", n.URL, n.ClusterID, n.ClientID)
+	s := fmt.Sprintf("Установлено соединение с %s clusterID: [%s] clientID: [%s]\n", n.URL, n.ClusterID, n.ClientID)
 	n.App.Log.Info(s)
 
 	// Process Subscriber Options.
@@ -97,12 +97,6 @@ func (n *NatsStream) Start() {
 		startOpt = stan.StartAtTimeDelta(ago)
 	}
 
-	/*	subj, i := n.Subj, 0
-		mcb := func(msg *stan.Msg) {
-		i++
-		printMsg(msg, i) //TODO
-	}*/
-
 	n.Sub, err = n.SC.QueueSubscribe(n.Subj, n.Qgroup, n.MsgHandler, startOpt, stan.DurableName(n.Durable)) //TODO MsgHandler
 	if err != nil {
 		n.SC.Close()
@@ -110,37 +104,20 @@ func (n *NatsStream) Start() {
 		os.Exit(1)
 	}
 
-	s = fmt.Sprintf("Listening on [%s], clientID=[%s], qgroup=[%s] durable=[%s]\n", n.Subj, n.ClientID, n.Qgroup, n.Durable)
+	s = fmt.Sprintf("Ждем сообщений [%s], clientID=[%s], qgroup=[%s] durable=[%s]\n", n.Subj, n.ClientID, n.Qgroup, n.Durable)
 	n.App.Log.Info(s)
 
 	if n.ShowTime {
-		log.SetFlags(log.LstdFlags) //TODO
+		log.SetFlags(log.LstdFlags)
 	}
-	//cleanupDone := make(chan bool)
-
-	/*	// Wait for a SIGINT (perhaps triggered by user with CTRL-C)
-		// Run cleanup when signal is received
-		signalChan := make(chan os.Signal, 1)
-		cleanupDone := make(chan bool)
-		signal.Notify(signalChan, os.Interrupt)
-		go func() {
-			for range signalChan {
-				fmt.Printf("\nReceived an interrupt, unsubscribing and closing connection...\n\n")
-				// Do not unsubscribe a durable on exit, except if asked to.
-				if n.Durable == "" || n.Unsubscribe {
-					sub.Unsubscribe()
-				}
-				n.SC.Close()
-				cleanupDone <- true
-			}
-		}()
-		<-cleanupDone*/
 }
 
 func (n *NatsStream) Stop() {
+	n.App.Log.Info("Остановка подписчика, отписка и закрытие соединения...")
 	if n.Durable == "" || n.Unsubscribe {
 		n.Sub.Unsubscribe()
 	}
 	n.SC.Close()
 	n.NC.Close()
+	n.App.Log.Info("Подписчик остановлен")
 }

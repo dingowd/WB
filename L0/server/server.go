@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/dingowd/WB/L0/app"
 	"net/http"
 
@@ -14,11 +13,6 @@ type Server struct {
 	Addr string
 	Srv  *http.Server
 }
-
-var (
-	ErrorStopServer  = errors.New("timeout to stop server")
-	ErrorStartServer = errors.New("timeout to start server")
-)
 
 func NewServer(app *app.App, addr string) *Server {
 	s := &Server{App: app, Addr: addr}
@@ -44,8 +38,9 @@ func (s *Server) Start() error {
 	router.HandleFunc("/get", s.GetOrder).Methods("GET")
 	http.Handle("/", router)
 	Srv := &http.Server{Addr: s.Addr, Handler: router}
+	s.Srv = Srv
 	s.App.Log.Info("http сервер запускается")
-	err := Srv.ListenAndServe()
+	err := s.Srv.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -53,5 +48,6 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() error {
+	s.App.Log.Info("остановка http сервера")
 	return s.Srv.Close()
 }

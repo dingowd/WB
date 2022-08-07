@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var configFile string
@@ -29,7 +30,7 @@ func main() {
 	// Init config
 	conf := config.NewConfig()
 	if _, err := toml.DecodeFile(configFile, &conf); err != nil {
-		fmt.Fprintln(os.Stdout, "error decoding toml "+err.Error()+" setting default values")
+		fmt.Fprintln(os.Stdout, "ошибка чтения toml файла "+err.Error()+", установка параметров по умолчанию")
 		conf = config.Default()
 	}
 	// init logger
@@ -67,17 +68,20 @@ func main() {
 		sub = natsstream.NewSub(conf.Subscriber)
 		sub.Start()
 	}()
-
+	// init http server
 	server := server.NewServer(app, conf.HTTPSrv)
 
-	exit := make(chan os.Signal, 1)
+	exit := make(chan os.Signal)
 	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-exit
+		logg.Info("Приложение останавливается")
 		sub.Stop()
-		server.Srv.Close()
+		server.Stop()
+		logg.Info("Приложение остановлено")
+		time.Sleep(5 * time.Second)
 	}()
 
-	// init http server
+	// start http server
 	server.Start()
 }
