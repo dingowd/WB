@@ -1,10 +1,9 @@
 package natsstream
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/dingowd/WB/L0/app"
-	"github.com/dingowd/WB/L0/model"
+	"github.com/dingowd/WB/L0/utils"
 	nats "github.com/nats-io/nats.go"
 	"github.com/nats-io/stan.go"
 	"github.com/nats-io/stan.go/pb"
@@ -39,13 +38,17 @@ func NewSub(s NatsStream) *NatsStream {
 }
 
 func (n *NatsStream) MsgHandler(msg *stan.Msg) {
-	var o model.Order
-	json.Unmarshal(msg.Data, &o)
-	s := fmt.Sprintln("Received: ", o)
-	n.App.Log.Info(s)
-	err := n.App.Store.CreateOrder(o)
+	//var o *model.Order
+	o, err := utils.Validate(msg.Data)
 	if err != nil {
-		n.App.Log.Info(err.Error())
+		n.App.Log.Error(err.Error())
+		return
+	}
+	s := fmt.Sprintln("Получено: ", o)
+	n.App.Log.Info(s)
+	errC := n.App.Store.CreateOrder(*o)
+	if errC != nil {
+		n.App.Log.Error(errC.Error())
 	}
 }
 
@@ -76,7 +79,7 @@ func (n *NatsStream) Start() {
 		n.App.Log.Error(s)
 		os.Exit(1)
 	}
-	s := fmt.Sprintf("Установлено соединение с %s clusterID: [%s] clientID: [%s]\n", n.URL, n.ClusterID, n.ClientID)
+	s := fmt.Sprintf("Установлено соединение с %s clusterID: [%s] clientID: [%s]", n.URL, n.ClusterID, n.ClientID)
 	n.App.Log.Info(s)
 
 	// Process Subscriber Options.

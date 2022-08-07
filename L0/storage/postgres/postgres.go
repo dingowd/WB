@@ -43,7 +43,7 @@ func (s *Storage) CreateOrder(d model.Order) error {
 	var exist bool
 
 	if s.IsOrderExist(d.OrderUid) {
-		s.Log.Error(storage.ErrorOrderExist.Error() + d.OrderUid)
+		s.Log.Error(storage.ErrorOrderExist.Error() + " " + d.OrderUid)
 		return storage.ErrorOrderExist
 	}
 	// создание оплаты
