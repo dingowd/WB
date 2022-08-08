@@ -49,7 +49,9 @@ func (n *NatsStream) MsgHandler(msg *stan.Msg) {
 	errC := n.App.Store.CreateOrder(*o)
 	if errC != nil {
 		n.App.Log.Error(errC.Error())
+		return
 	}
+	n.App.Cache.WriteToCache(*o)
 }
 
 func (n *NatsStream) Start() {
