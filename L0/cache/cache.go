@@ -10,7 +10,7 @@ import (
 type CacheInterface interface {
 	Init()
 	ReadFromCache(id string) (*model.CacheOrder, error)
-	WriteToCache(o model.Order)
+	WriteToCache(o model.Order) int
 }
 
 type Cache struct {
