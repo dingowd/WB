@@ -67,7 +67,7 @@ func (n *NatsStream) Start() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer nc.Close()
+	// Connect to STAN
 	n.SC, err = stan.Connect(n.ClusterID, n.ClientID, stan.NatsConn(n.NC),
 		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
 			s := fmt.Sprintf("Соединение потеряно, причина: %v", reason)

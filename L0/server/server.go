@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/dingowd/WB/L0/app"
 	"html/template"
 	"net/http"
@@ -22,22 +23,25 @@ func NewServer(app *app.App, addr string) *Server {
 func (s *Server) GetOrder(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if len(id) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("id is missing!!!"))
 		return
 	}
 	order, err := s.App.Cache.ReadFromCache(id)
 	if err != nil {
 		msg := err.Error() + " " + id
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(msg))
 		s.App.Log.Error(msg)
 		return
 	}
-	tmpl, _ := template.ParseFiles("./L0/templates/index.html")
-	tmpl.Execute(w, order.Order)
-	/*	b, _ := json.Marshal(order)
-		msg := fmt.Sprint(order)
-		s.App.Log.Info(msg)
-		w.Write(b)*/
+	tmpl, errT := template.ParseFiles("./L0/templates/index.html")
+	if errT != nil {
+		s := fmt.Sprint(order)
+		w.Write([]byte(s))
+	} else {
+		tmpl.Execute(w, order.Order)
+	}
 }
 
 func (s *Server) Start() error {
