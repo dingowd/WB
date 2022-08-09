@@ -10,7 +10,10 @@ import (
 )
 
 func TestCache(t *testing.T) {
-	var c, a Cache
+	var a Cache
+	l := mocks.NewLogger(t)
+	stor := mocks.NewStorage(t)
+	c := NewCache(l, stor, 25)
 	c.Amount = 25
 	item := model.Item{
 		ChrtId: 9934930,
@@ -41,4 +44,13 @@ func TestInit(t *testing.T) {
 	stor.On("GetOrdersByLimit", mock.Anything).Once().Return(model.CacheOrderList{}, nil)
 	c.Init()
 	stor.AssertExpectations(t)
+}
+
+func TestReadFromCache(t *testing.T) {
+	l := mocks.NewLogger(t)
+	stor := mocks.NewStorage(t)
+	c := NewCache(l, stor, 0)
+	require.NotNil(t, c)
+	stor.On("IsOrderExist", mock.Anything).Maybe().Return(true)
+	stor.On("GetOrder", mock.Anything).Maybe().Return(model.Order{}, nil)
 }

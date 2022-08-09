@@ -3,7 +3,7 @@ package natsstream
 import (
 	"fmt"
 	"github.com/dingowd/WB/L0/app"
-	"github.com/dingowd/WB/L0/utils"
+	"github.com/dingowd/WB/L0/internal/utils"
 	nats "github.com/nats-io/nats.go"
 	"github.com/nats-io/stan.go"
 	"github.com/nats-io/stan.go/pb"
