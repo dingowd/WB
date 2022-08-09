@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/dingowd/WB/L0/cache"
-	"github.com/dingowd/WB/L0/logger"
-	"github.com/dingowd/WB/L0/storage"
+	"github.com/dingowd/WB/L0/internal/cache"
+	"github.com/dingowd/WB/L0/internal/logger"
+	"github.com/dingowd/WB/L0/internal/storage"
 )
 
 type App struct {

@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"github.com/dingowd/WB/L0/logger"
+	"github.com/dingowd/WB/L0/internal/logger"
+	storage2 "github.com/dingowd/WB/L0/internal/storage"
 	"github.com/dingowd/WB/L0/model"
-	"github.com/dingowd/WB/L0/storage"
 	"time"
 )
 
@@ -15,12 +15,12 @@ type CacheInterface interface {
 
 type Cache struct {
 	Log    logger.Logger
-	Stor   storage.Storage
+	Stor   storage2.Storage
 	Amount int
 	Body   model.CacheOrderList
 }
 
-func NewCache(log logger.Logger, stor storage.Storage, a int) *Cache {
+func NewCache(log logger.Logger, stor storage2.Storage, a int) *Cache {
 	return &Cache{
 		Log:    log,
 		Stor:   stor,
@@ -41,7 +41,7 @@ func (c *Cache) ReadFromCache(id string) (*model.CacheOrder, error) {
 		}
 	}
 	if !c.Stor.IsOrderExist(id) {
-		return nil, storage.ErrorOrderNotExist
+		return nil, storage2.ErrorOrderNotExist
 	}
 	o, err := c.Stor.GetOrder(id)
 	if err != nil {

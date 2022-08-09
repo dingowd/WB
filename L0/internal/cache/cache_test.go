@@ -1,8 +1,11 @@
 package cache
 
 import (
+	"github.com/dingowd/WB/L0/mocks"
 	"github.com/dingowd/WB/L0/model"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
 	"testing"
 )
 
@@ -28,4 +31,14 @@ func TestCache(t *testing.T) {
 	b, _ := c.ReadFromCache("b563feb7b2b84b6test")
 	p = *b
 	require.Equal(t, o, p.Order)
+}
+
+func TestInit(t *testing.T) {
+	l := mocks.NewLogger(t)
+	stor := mocks.NewStorage(t)
+	c := NewCache(l, stor, 25)
+	require.NotNil(t, c)
+	stor.On("GetOrdersByLimit", mock.Anything).Once().Return(model.CacheOrderList{}, nil)
+	c.Init()
+	stor.AssertExpectations(t)
 }

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/dingowd/WB/L0/app"
-	с "github.com/dingowd/WB/L0/cache"
-	"github.com/dingowd/WB/L0/config"
-	"github.com/dingowd/WB/L0/logger/lrus"
+	с "github.com/dingowd/WB/L0/internal/cache"
+	"github.com/dingowd/WB/L0/internal/config"
+	"github.com/dingowd/WB/L0/internal/logger/lrus"
+	"github.com/dingowd/WB/L0/internal/storage"
+	"github.com/dingowd/WB/L0/internal/storage/postgres"
 	"github.com/dingowd/WB/L0/server"
-	"github.com/dingowd/WB/L0/storage"
-	"github.com/dingowd/WB/L0/storage/postgres"
 	"github.com/dingowd/WB/L0/subscriber"
 	natsstream "github.com/dingowd/WB/L0/subscriber/nats_stream"
 	"os"
@@ -23,7 +23,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "./L0/config/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "./L0/internal/config/config.toml", "Path to configuration file")
 }
 
 func main() {

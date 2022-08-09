@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"github.com/dingowd/WB/L0/logger/lrus"
+	"github.com/dingowd/WB/L0/internal/logger/lrus"
 	"github.com/dingowd/WB/L0/model"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
