@@ -57,3 +57,20 @@ create table if not exists items
     order_uid    varchar(255) references orders (order_uid)
         on delete cascade
 );
+
+insert into payment (transaction, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total,
+                     custom_fee)
+values ('b563feb7b2b84b6test', '', 'USD', 'wbpay', 1817, 1637907727, 'alpha', 1500, 317, 0);
+
+insert into delivery (name, phone, zip, city, address, region, email)
+values ('Test Testov', '+9720000000', '2639809', 'Kiryat Mozkin', 'Ploshad Mira 15', 'Kraiot', 'test@gmail.com');
+
+insert into orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey,
+                    sm_id, date_created, oof_shard, delivery_id, transaction)
+values ('b563feb7b2b84b6test', 'WBILMTESTTRACK', 'WBIL', 'en', '', 'test', 'meest', '9', 99, '2021-11-26T06:22:19Z',
+        '1',
+        (select id from delivery where address = 'Ploshad Mira 15' limit 1), 'b563feb7b2b84b6test');
+
+insert into items (chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status, order_uid)
+values (9934930, 'WBILMTESTTRACK', 453, 'ab4219087a764ae0btest', 'Mascaras', 30, '0', 317, 2389212, 'Vivienne Sabo',
+        202, 'b563feb7b2b84b6test');
