@@ -11,13 +11,16 @@ type MyMap struct {
 	m  map[string]int
 }
 
-func (m *MyMap) WriteToMap(key string, val int) {
+func (m *MyMap) WriteToMap(key string, val int, wg *sync.WaitGroup) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.m[key] = val
+	wg.Done()
 }
 
 func main() {
+	var wg sync.WaitGroup
+
 	// via mutex
 	m := &MyMap{
 		m: make(map[string]int),
@@ -26,13 +29,12 @@ func main() {
 	values := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	for i, v := range keys {
-		go m.WriteToMap(v, values[i])
+		wg.Add(1)
+		go m.WriteToMap(v, values[i], &wg)
 	}
-	fmt.Fprintln(os.Stdout, m.m)
 
 	// via sync.Map
 	var sm sync.Map
-	var wg sync.WaitGroup
 	for i, v := range keys {
 		wg.Add(1)
 		go func(i int, v string) {
@@ -41,9 +43,14 @@ func main() {
 		}(i, v)
 	}
 	wg.Wait()
+	fmt.Fprintln(os.Stdout, "via mutex")
+	for k, v := range m.m {
+		fmt.Fprint(os.Stdout, k, ":", v, " ")
+	}
+	fmt.Fprintln(os.Stdout, "")
+	fmt.Fprintln(os.Stdout, "via sync.Map")
 	sm.Range(func(k, v interface{}) bool {
-		fmt.Println("key:", k, ", val:", v)
+		fmt.Fprint(os.Stdout, k, ":", v, " ")
 		return true
 	})
-
 }
