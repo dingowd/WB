@@ -1,31 +1,53 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"math/rand"
 	"os"
-	"sync"
 	"sync/atomic"
+	"time"
 )
 
 type Counter struct {
-	c  int32
-	wg sync.WaitGroup
+	c int32
 }
 
 func (c *Counter) Inc() {
 	atomic.AddInt32(&c.c, 1)
-	c.wg.Done()
+}
+
+func worker(i int, ch chan struct{}, c *Counter) {
+	for range ch {
+		// имитация работы с произвольным временем выполнения
+		rand.Seed(time.Now().UnixNano())
+		n := rand.Intn(1000)
+		time.Sleep(time.Duration(n) * time.Millisecond)
+		c.Inc()
+		fmt.Fprintln(os.Stdout, "worker", i, "done job in", n, "milliseconds and set counter to", c.c)
+	}
 }
 
 func main() {
-	var c Counter
-	var max int
-	fmt.Fprint(os.Stdout, "Enter the max value of counter: ")
-	fmt.Fscan(os.Stdin, &max)
-	for i := 0; i < max; i++ {
-		c.wg.Add(1)
-		go c.Inc()
+	ch := make(chan struct{})
+	var num int
+	c := new(Counter)
+	fmt.Fprint(os.Stdout, "Enter the number of workers: ")
+	fmt.Fscan(os.Stdin, &num)
+	for i := 0; i < num; i++ {
+		go worker(i+1, ch, c)
 	}
-	c.wg.Wait()
-	fmt.Fprintln(os.Stdout, c.c)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for {
+		select {
+		case <-ctx.Done():
+			close(ch)
+			fmt.Fprintln(os.Stdout, "Counter now -", c.c)
+			fmt.Fprintln(os.Stdout, "stop the program")
+			return
+		default:
+			ch <- struct{}{}
+		}
+	}
 }

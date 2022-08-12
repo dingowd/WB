@@ -5,18 +5,18 @@ import (
 	"os"
 )
 
-func Quicksort(arr []int) {
+func QuickSort(arr []int) {
 	if len(arr) <= 1 {
 		return
 	}
 
-	split := partition(arr)
+	split := part(arr)
 
-	Quicksort(arr[:split])
-	Quicksort(arr[split:])
+	QuickSort(arr[:split])
+	QuickSort(arr[split:])
 }
 
-func partition(arr []int) int {
+func part(arr []int) int {
 	point := arr[len(arr)/2]
 
 	left := 0
@@ -41,6 +41,6 @@ func partition(arr []int) int {
 
 func main() {
 	arr := []int{2, 5, 8, 1, 4, 9, 3}
-	Quicksort(arr)
+	QuickSort(arr)
 	fmt.Fprintln(os.Stdout, arr)
 }
