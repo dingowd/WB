@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+// Sleep используем контекст с таймаутом, при получении значения в канал через ctx.Done просто завершаем работу функции
+// всё остальное время не делаем ничего
 func Sleep(t time.Duration) {
 	ctx, _ := context.WithTimeout(context.Background(), t)
 	select {

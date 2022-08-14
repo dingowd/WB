@@ -11,6 +11,9 @@ func main() {
 	fmt.Fscan(os.Stdin, &s)
 	s = strings.ToLower(s)
 	// вариант 1 с использованием map
+	// ключи в map уникальны
+	// поэтому если длина map не равна длине строки,
+	// то есть повторяющиеся символы
 	m := make(map[string]bool)
 	for _, v := range s {
 		m[string(v)] = true
@@ -21,6 +24,7 @@ func main() {
 		fmt.Fprintln(os.Stdout, "false")
 	}
 	// вариант 2 с использованием цикла
+	// перебираем всю строку
 	result := true
 outer:
 	for i := 0; i < len(s); i++ {

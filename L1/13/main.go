@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// no comments
 func main() {
 	a := 1
 	b := 2

@@ -55,10 +55,11 @@ func (l *Lrus) Warn(msg string) {
 	l.Log.Warn(msg)
 }
 
+// подключаем логгер logrus через "переходник" - структуру Lrus
 func main() {
-	l := New()
-	l.SetLevel("DEBUG")
-	l.SetOutput(os.Stdout)
+	l := New()             // инициализация
+	l.SetLevel("DEBUG")    // установка уровня логгирования
+	l.SetOutput(os.Stdout) // установка вывода в Stdout
 	l.Info("info for logger")
 	l.Error("error for logger")
 	l.Debug("debug for logger")

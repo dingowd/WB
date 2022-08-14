@@ -22,13 +22,13 @@ func main() {
 	fmt.Fprintf(os.Stdout, "%064b, %v - исходное число\n", num, num)
 	// Способ 1 - через получение остатка от деления
 	if num != -(1 << (64 - 1)) {
-		os1 := num % (1 << bNum)
-		os2 := num % (1 << (bNum + 1))
+		os1 := num % (1 << bNum)       // получаем остаток от деления на 2 в степени номер бита
+		os2 := num % (1 << (bNum + 1)) // получаем остаток от деления на 2 в степени (номер бита + 1)
 		res = num - os2
 		if bit == 0 {
 			res += os1
 		} else {
-			if num >= 0 {
+			if num >= 0 { // учитываем знак числа
 				res = res + os1 + 1<<bNum
 			} else {
 				res = res + os1 - 1<<bNum

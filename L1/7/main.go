@@ -11,6 +11,7 @@ type MyMap struct {
 	m  map[string]int
 }
 
+// пишем в map элемент с ключом key и значением val
 func (m *MyMap) WriteToMap(key string, val int, wg *sync.WaitGroup) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -28,21 +29,21 @@ func main() {
 	keys := []string{"1", "2", "1", "3", "5", "7", "7", "8", "9", "10"}
 	values := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	for i, v := range keys {
+	for i, v := range keys { // запускаем len(keys) горутин
 		wg.Add(1)
 		go m.WriteToMap(v, values[i], &wg)
 	}
 
 	// via sync.Map
 	var sm sync.Map
-	for i, v := range keys {
+	for i, v := range keys { // запускаем len(keys) горутин
 		wg.Add(1)
 		go func(i int, v string) {
 			sm.Store(v, values[i])
 			wg.Done()
 		}(i, v)
 	}
-	wg.Wait()
+	wg.Wait() // ждём выполнения всех горутин
 	fmt.Fprintln(os.Stdout, "via mutex")
 	for k, v := range m.m {
 		fmt.Fprint(os.Stdout, k, ":", v, " ")

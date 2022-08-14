@@ -26,19 +26,19 @@ func Sub(x, y *big.Int) *big.Int {
 	return res.Sub(x, y)
 }
 
+// используем пакет big
 func main() {
 	arg1 := new(big.Int)
 	arg2 := new(big.Int)
 	var str1, str2 string
 	flag := false
-	for flag != true {
+	for flag != true { // проверка на то, что ввели именно число
 		fmt.Fprint(os.Stdout, "Введите число 1:")
 		fmt.Fscan(os.Stdin, &str1)
 		_, flag = arg1.SetString(str1, 10)
-
 	}
 	flag = false
-	for flag != true {
+	for flag != true { // проверка на то, что ввели именно число
 		fmt.Fprint(os.Stdout, "Введите число 2:")
 		fmt.Fscan(os.Stdin, &str2)
 		_, flag = arg2.SetString(str2, 10)

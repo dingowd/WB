@@ -25,6 +25,8 @@ func Distance(p1, p2 Point) float64 {
 	dY = math.Pow(dY, 2)
 	return math.Sqrt(dX + dY)
 }
+
+// no comments
 func main() {
 	var x, y int
 	fmt.Fprint(os.Stdout, "Enter X of point 1:")

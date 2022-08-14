@@ -13,7 +13,7 @@ type Counter struct {
 	c int32
 }
 
-func (c *Counter) Inc() {
+func (c *Counter) Inc() { // потокобезопасное увеличение счетчика на 1 через atomic
 	atomic.AddInt32(&c.c, 1)
 }
 
@@ -34,9 +34,11 @@ func main() {
 	c := new(Counter)
 	fmt.Fprint(os.Stdout, "Enter the number of workers: ")
 	fmt.Fscan(os.Stdin, &num)
+	// n воркеров конкурентно инкрементируют счетчик
 	for i := 0; i < num; i++ {
 		go worker(i+1, ch, c)
 	}
+	// остановка программы по истечению 5 секунд
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	for {
