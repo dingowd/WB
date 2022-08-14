@@ -3,26 +3,38 @@ package main
 import (
 	"fmt"
 	"os"
-	"sync"
 )
 
-func Multipler(cIn chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
-	v := <-cIn
-	fmt.Fprintln(os.Stdout, v)
+func toChan1(nums []int, out chan int) <-chan int {
+	go func() {
+		for _, n := range nums {
+			out <- n
+		}
+		close(out)
+	}()
+	return out
 }
 
+func fromChan1toChan2(in <-chan int, out chan int) <-chan int {
+	go func() {
+		for n := range in {
+			out <- n * n
+		}
+		close(out)
+	}()
+	return out
+}
+
+// классический пайплайн
 func main() {
 	arr := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-	cIn := make(chan int)
-	wg := new(sync.WaitGroup)
-	//cOut := make(chan int)
-	for _, v := range arr {
-		wg.Add(1)
-		cIn <- v
-		Multipler(cIn, wg)
+	ch1 := make(chan int)
+	ch2 := make(chan int)
+
+	toMult := toChan1(arr, ch1)
+	toPrint := fromChan1toChan2(toMult, ch2)
+
+	for range arr {
+		fmt.Fprintln(os.Stdout, <-toPrint)
 	}
-	wg.Wait()
-	fmt.Fprintln(os.Stdout, "done")
-	close(cIn)
 }
