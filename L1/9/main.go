@@ -5,24 +5,22 @@ import (
 	"os"
 )
 
-func toChan1(nums []int, out chan int) <-chan int {
+func toChan1(nums []int, out chan int) {
 	go func() {
 		for _, n := range nums {
 			out <- n
 		}
 		close(out)
 	}()
-	return out
 }
 
-func fromChan1toChan2(in <-chan int, out chan int) <-chan int {
+func fromChan1toChan2(in <-chan int, out chan int) {
 	go func() {
 		for n := range in {
 			out <- n * n
 		}
 		close(out)
 	}()
-	return out
 }
 
 // классический пайплайн
@@ -33,10 +31,10 @@ func main() {
 	ch1 := make(chan int)
 	ch2 := make(chan int)
 
-	toMult := toChan1(arr, ch1)
-	toPrint := fromChan1toChan2(toMult, ch2)
+	toChan1(arr, ch1)
+	fromChan1toChan2(ch1, ch2)
 
 	for range arr {
-		fmt.Fprintln(os.Stdout, <-toPrint)
+		fmt.Fprintln(os.Stdout, <-ch2)
 	}
 }
