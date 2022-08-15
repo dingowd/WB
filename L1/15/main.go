@@ -15,8 +15,8 @@ var justString string
 // после выполнения функции someFunc в main память будет очищена от переменной v
 func someFunc() {
 	v := createHugeString(1 << 10)
-	b := make([]byte, 0)
-	b = append(b, []byte(v[:100])...)
+	b := make([]rune, 0)
+	b = append(b, []rune(v[:100])...)
 	justString = string(b)
 }
 
