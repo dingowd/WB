@@ -6,7 +6,7 @@ import (
 )
 
 func QuickSort(arr []int) {
-	if len(arr) <= 1 {
+	if len(arr) < 2 { // базовый случай
 		return
 	}
 
@@ -17,7 +17,7 @@ func QuickSort(arr []int) {
 }
 
 func part(arr []int) int {
-	point := arr[len(arr)/2]
+	point := arr[len(arr)/2] // опорный элемент
 
 	left := 0
 	right := len(arr) - 1

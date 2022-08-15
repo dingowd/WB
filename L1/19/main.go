@@ -16,7 +16,7 @@ func main() {
 		r1[i], r1[l-i-1] = r1[l-i-1], r1[i]
 	}
 	fmt.Fprintln(os.Stdout, "Method 1")
-	fmt.Println(string(r1))
+	fmt.Fprintln(os.Stdout, string(r1))
 
 	// Method 2 идем с конца строки к началу и добавляем элементы в обратном порядке
 	r2 := []rune(in)
@@ -25,5 +25,5 @@ func main() {
 		r3 = append(r3, r2[i])
 	}
 	fmt.Fprintln(os.Stdout, "Method 2")
-	fmt.Println(string(r3))
+	fmt.Fprintln(os.Stdout, string(r3))
 }

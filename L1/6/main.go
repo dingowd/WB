@@ -44,6 +44,19 @@ func goroutine4(ctx context.Context) {
 	}
 }
 
+// с помощью panic
+func goroutine5(wg *sync.WaitGroup) {
+	defer wg.Done()
+	n := 0
+	for {
+		time.Sleep(1 * time.Second)
+		if n == 10 {
+			panic("I am in panic")
+		}
+		n++
+	}
+}
+
 func main() {
 	// С помощью sync.WaitGroup
 	wg := new(sync.WaitGroup)
@@ -65,6 +78,11 @@ func main() {
 	// С помощью context.Context
 	ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
 	go goroutine4(ctx)
+
+	// с помощью panic
+	wg.Add(1)
+	go goroutine5(wg)
+	wg.Wait()
 	time.Sleep(4 * time.Second)
-	fmt.Fprintln(os.Stdout, "main done")
+	fmt.Fprintln(os.Stdout, "main done") // никогда не выполнится потому что горутина 5 обвалит приложение в панику
 }
