@@ -1,0 +1,10 @@
+dsn = "user=postgres dbname=calendar sslmode=disable password=masterkeyr"
+httpsrv = "127.0.0.1:3541"
+storagetype = "sql"
+
+[logger]
+level = "INFO"
+logfile = "./log.txt"
+
+# TODO
+# ...
