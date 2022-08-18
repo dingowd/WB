@@ -3,5 +3,6 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/L0/internal/storage/postgres/postgres.go" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/L0/migrations/postgres.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/L2/develop/dev11/internal/storage/sql/create_table.sql" dialect="PostgreSQL" />
   </component>
 </project>

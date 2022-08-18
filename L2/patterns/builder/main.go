@@ -53,8 +53,27 @@ func NewHouseBuilder() HouseBuilderI {
 	return houseBuilder{}
 }
 
+type preparedHouse struct {
+	houseBuilder
+}
+
+func (p preparedHouse) Build() House {
+	return House{
+		SquareMeters: 150,
+		Material:     "Дерево",
+		Rooms:        6,
+		Roof:         "черепица",
+	}
+}
+
+func NewPreparedHouseBuilder() HouseBuilderI {
+	return preparedHouse{}
+}
 func main() {
 	houseBuilder := NewHouseBuilder()
 	house := houseBuilder.SquareMeters(100).Material("Кирпич").Rooms(5).Roof("шифер").Build()
 	fmt.Println(house)
+	preparedHouseBuilder := NewPreparedHouseBuilder()
+	preparedHouse := preparedHouseBuilder.Build()
+	fmt.Println(preparedHouse)
 }
