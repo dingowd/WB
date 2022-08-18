@@ -4,18 +4,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/dingowd/WB/L2/develop/dev11/internal/app"
 	"github.com/dingowd/WB/L2/develop/dev11/internal/logger/lrus"
-	storage2 "github.com/dingowd/WB/L2/develop/dev11/internal/storage"
+	internalhttp "github.com/dingowd/WB/L2/develop/dev11/internal/server/http"
+	storage "github.com/dingowd/WB/L2/develop/dev11/internal/storage"
+	sqlstorage "github.com/dingowd/WB/L2/develop/dev11/internal/storage/sql"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/BurntSushi/toml"
-	"github.com/dingowd/WB/L2/develop/dev11/internal/app"
-	internalhttp "github.com/dingowd/WB/L2/develop/dev11/internal/server/http"
-	memorystorage "github.com/dingowd/WB/L2/develop/dev11/internal/storage/memory"
-	sqlstorage "github.com/dingowd/WB/L2/develop/dev11/internal/storage/sql"
 )
 
 var configFile string
@@ -50,18 +48,11 @@ func main() {
 	}
 
 	// init storage
-	var storage storage2.Storage
-	switch config.Storagetype {
-	case "memory":
-		storage = memorystorage.New()
-	case "sql":
-		storage = sqlstorage.New()
-		if err := storage.Connect(context.Background(), config.DSN); err != nil {
-			logg.Error("failed to connect database" + err.Error())
-			os.Exit(1) // nolint:gocritic
-		}
-	default:
-		storage = memorystorage.New()
+	var storage storage.Storage
+	storage = sqlstorage.New(logg)
+	if err := storage.Connect(context.Background(), config.DSN); err != nil {
+		logg.Error("failed to connect database" + err.Error())
+		os.Exit(1) // nolint:gocritic
 	}
 	defer storage.Close()
 
@@ -71,26 +62,16 @@ func main() {
 	// init http server
 	server := internalhttp.NewServer(calendar, config.HTTPSrv)
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-	defer cancel()
-
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-		defer cancel()
-
-		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
-		}
+		<-exit
+		logg.Info("Calendar stopping...")
+		server.Stop()
+		logg.Info("Calendar stopped")
+		time.Sleep(5 * time.Second)
 	}()
-
 	logg.Info("calendar is running...")
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1)
-	}
+	server.Start()
 }

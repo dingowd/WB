@@ -1,10 +1,8 @@
 package app
 
 import (
-	"context"
 	"github.com/dingowd/WB/L2/develop/dev11/internal/logger"
 	"github.com/dingowd/WB/L2/develop/dev11/internal/storage"
-	"github.com/dingowd/WB/L2/develop/dev11/models"
 )
 
 type App struct {
@@ -19,7 +17,7 @@ func New(logger logger.Logger, storage storage.Storage) *App {
 	}
 }
 
-func (a *App) CreateEvent(ctx context.Context, e models.Event) error {
+/*func (a *App) CreateEvent(ctx context.Context, e models.Event) error {
 	var err error
 	if err = a.Storage.Create(e); err != nil {
 		a.Logg.Error(err.Error())
@@ -68,4 +66,4 @@ func (a *App) GetMonthEvent(day string) ([]models.Event, error) {
 		a.Logg.Error(err.Error())
 	}
 	return events, err
-}
+}*/

@@ -1,4 +1,4 @@
-dsn = "user=postgres dbname=calendar sslmode=disable password=masterkeyr"
+dsn = "user=postgres dbname=calendar sslmode=disable password=masterkey"
 httpsrv = "127.0.0.1:3541"
 storagetype = "sql"
 
