@@ -1,7 +1,6 @@
 package internalhttp
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dingowd/WB/L2/develop/dev11/internal/app"
@@ -43,7 +42,8 @@ func (s *Server) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	var e models.Event
 	var err error
-	err = json.NewDecoder(r.Body).Decode(&e)
+	//err = json.NewDecoder(r.Body).Decode(&e)
+	err = utils.ToStruct(r, &e)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(utils.ReturnError(err.Error()))
@@ -64,23 +64,9 @@ func (s *Server) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError("Method isn't POST"))
 		return
 	}
-	/*	idS := r.URL.Query().Get("id")
-		if len(idS) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(utils.ReturnError("id is missing. check request."))
-			return
-		}
-		var err error
-		var id int
-		id, err = strconv.Atoi(idS)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(utils.ReturnError("Wrong id"))
-			return
-		}*/
 	var e models.DBEvent
 	var err error
-	err = json.NewDecoder(r.Body).Decode(&e)
+	err = utils.ToDBStruct(r, &e)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		msg := err.Error()
@@ -103,21 +89,16 @@ func (s *Server) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError("Method isn`t POST"))
 		return
 	}
-	idS := r.URL.Query().Get("id")
-	if len(idS) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("id is missing. check request."))
-		return
-	}
+	var e models.DBEvent
 	var err error
-	var id int
-	id, err = strconv.Atoi(idS)
+	err = utils.ToDBStruct(r, &e)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Wrong id"))
+		msg := err.Error()
+		w.Write(utils.ReturnError(msg))
 		return
 	}
-	err = s.App.Storage.Delete(id)
+	err = s.App.Storage.Delete(e.ID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		msg := err.Error()
@@ -218,17 +199,14 @@ func (s *Server) Start() error {
 	s.App.Logg.Info("http server starting")
 	mux := http.NewServeMux()
 	s.Srv = &http.Server{Addr: s.Addr, Handler: mux}
-	mux.HandleFunc("/hello", s.Hello)
-	mux.HandleFunc("/create_event", s.CreateEvent)
-	mux.HandleFunc("/update_event", s.UpdateEvent)
-	mux.HandleFunc("/delete_event", s.DeleteEvent)
-	mux.HandleFunc("/events_for_day", s.GetEventsForDay)
-	mux.HandleFunc("/events_for_week", s.GetEventsForWeek)
-	mux.HandleFunc("/events_for_month", s.GetEventsForMonth)
-	if err := s.Srv.ListenAndServe(); err != nil {
-		s.App.Logg.Error(err.Error())
-		return err
-	}
+	mux.HandleFunc("/hello", loggingMiddleware(s.Hello, s.App.Logg))
+	mux.HandleFunc("/create_event", loggingMiddleware(s.CreateEvent, s.App.Logg))
+	mux.HandleFunc("/update_event", loggingMiddleware(s.UpdateEvent, s.App.Logg))
+	mux.HandleFunc("/delete_event", loggingMiddleware(s.DeleteEvent, s.App.Logg))
+	mux.HandleFunc("/events_for_day", loggingMiddleware(s.GetEventsForDay, s.App.Logg))
+	mux.HandleFunc("/events_for_week", loggingMiddleware(s.GetEventsForWeek, s.App.Logg))
+	mux.HandleFunc("/events_for_month", loggingMiddleware(s.GetEventsForMonth, s.App.Logg))
+	s.Srv.ListenAndServe()
 	return nil
 }
 
