@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 )
@@ -27,8 +28,6 @@ func isAnagramm(first, second string) bool {
 	return true
 }
 
-type e []string
-
 func main() {
 	arr := []string{"тяпка", "пятка", "Пятак", "листок", "столик", "слиток", "чтотоеще", "столик"}
 	for i := 0; i < len(arr); i++ {
@@ -52,7 +51,6 @@ func main() {
 		}
 		arr[i] = ""
 	}
-	fmt.Println(m)
 	out := make(map[string][]string) // заполняем исходящее множество, проверяем на количество элементов
 	for key, _ := range m {
 		for k, _ := range m[key] {
@@ -64,5 +62,5 @@ func main() {
 	for key, _ := range out {
 		sort.Strings(out[key]) // сортируем исходящее множество
 	}
-	fmt.Println(out)
+	fmt.Fprintln(os.Stdout, out)
 }
