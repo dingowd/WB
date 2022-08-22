@@ -9,9 +9,8 @@ var or = func(channels ...<-chan interface{}) <-chan interface{} {
 	done := make(chan interface{})
 	for i := 0; i < len(channels); i++ {
 		go func(i int) {
-			for range channels[i] {
-			}
-			close(done)
+			<-channels[i]
+			close(done) // or done <- struct{}
 			return
 		}(i)
 	}
