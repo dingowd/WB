@@ -5,9 +5,9 @@ type Burger struct {
 }
 
 func (b *Burger) accept(v Visitor) {
-	v.vizitForBurger(b)
+	v.visitForBurger(b)
 }
 
 func (b *Burger) getType() string {
-	return "pizza"
+	return "burger"
 }

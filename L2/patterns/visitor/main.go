@@ -16,31 +16,15 @@ func main() {
 		amount: 250,
 	}
 
-	toBuy := &VisitorToBuy{
-		product: "pizza",
-	}
+	toBuy := &VisitorToBuy{}
 	pizza.accept(toBuy)
-	toBuy = &VisitorToBuy{
-		product: "burger",
-	}
 	burger.accept(toBuy)
-	toBuy = &VisitorToBuy{
-		product: "coffee",
-	}
 	coffee.accept(toBuy)
 
 	fmt.Fprintln(os.Stdout)
 
-	toCheck := &VisitorToCheck{
-		product: "pizza",
-	}
+	toCheck := &VisitorToCheck{}
 	pizza.accept(toCheck)
-	toCheck = &VisitorToCheck{
-		product: "burger",
-	}
 	burger.accept(toCheck)
-	toCheck = &VisitorToCheck{
-		product: "coffee",
-	}
 	coffee.accept(toCheck)
 }

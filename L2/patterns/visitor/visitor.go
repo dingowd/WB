@@ -7,38 +7,36 @@ import (
 
 type Visitor interface {
 	visitForPizza(p *Pizza)
-	vizitForBurger(b *Burger)
-	vizitForCoffee(c *Coffee)
+	visitForBurger(b *Burger)
+	visitForCoffee(c *Coffee)
 }
 
 type VisitorToBuy struct {
-	product string
 }
 
 func (v *VisitorToBuy) visitForPizza(p *Pizza) {
-	fmt.Fprintln(os.Stdout, "I have", p.radius, "cm", v.product)
+	fmt.Fprintln(os.Stdout, "I have", p.radius, "cm", p.getType())
 }
 
-func (v *VisitorToBuy) vizitForBurger(b *Burger) {
-	fmt.Fprintln(os.Stdout, "I have", b.size, v.product)
+func (v *VisitorToBuy) visitForBurger(b *Burger) {
+	fmt.Fprintln(os.Stdout, "I have", b.size, b.getType())
 }
 
-func (v *VisitorToBuy) vizitForCoffee(c *Coffee) {
-	fmt.Fprintln(os.Stdout, "I have", c.amount, "ml", v.product)
+func (v *VisitorToBuy) visitForCoffee(c *Coffee) {
+	fmt.Fprintln(os.Stdout, "I have", c.amount, "ml", c.getType())
 }
 
 type VisitorToCheck struct {
-	product string
 }
 
 func (v *VisitorToCheck) visitForPizza(p *Pizza) {
-	fmt.Fprintln(os.Stdout, "I checked", v.product, "It's really", p.radius, "cm")
+	fmt.Fprintln(os.Stdout, "I checked", p.getType(), "It's really", p.radius, "cm")
 }
 
-func (v *VisitorToCheck) vizitForBurger(b *Burger) {
-	fmt.Fprintln(os.Stdout, "I checked", v.product, "It is slightly smaller than the", b.size)
+func (v *VisitorToCheck) visitForBurger(b *Burger) {
+	fmt.Fprintln(os.Stdout, "I checked", b.getType(), "It is slightly smaller than the", b.size)
 }
 
-func (v *VisitorToCheck) vizitForCoffee(c *Coffee) {
-	fmt.Fprintln(os.Stdout, "I checked", v.product, " It's really", c.amount, "ml")
+func (v *VisitorToCheck) visitForCoffee(c *Coffee) {
+	fmt.Fprintln(os.Stdout, "I checked", c.getType(), "It's really", c.amount, "ml")
 }

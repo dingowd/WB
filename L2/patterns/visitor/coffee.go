@@ -5,9 +5,9 @@ type Coffee struct {
 }
 
 func (c *Coffee) accept(v Visitor) {
-	v.vizitForCoffee(c)
+	v.visitForCoffee(c)
 }
 
 func (p *Coffee) getType() string {
-	return "pizza"
+	return "coffee"
 }
