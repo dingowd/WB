@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 func Scan() string {
@@ -31,25 +32,36 @@ func main() {
 	sys, _ := os.LookupEnv("OS")
 	fmt.Fprintln(os.Stdout, sys)
 	var command string
+	cur, _ := os.Getwd()
+	os.Chdir(cur)
 	for command != "quit" {
+		fmt.Fprintln(os.Stdout)
 		fmt.Fprint(os.Stdout, "shell->")
 		command = Scan()
 		arg := strings.Split(command, " ")
 		cmd := strings.ToLower(arg[0])
 		switch cmd {
 		case "cd":
-			//dir := "cd "+ arg[1]
-			//exec.Command("cd", arg[1]).Run()
 			os.Chdir(arg[1])
 		case "pwd":
 			/*			if sys == "Windows_NT" {
-							cmd := exec.Command("cd")
+							args := make([]string, 0)
+							args = append(args, "/A", "cd")
+							cmd := exec.Command("cmd.exe", args...)
 							cmd.Stdout = os.Stdout
-							cmd.Run()
+							err := cmd.Run()
+							if err != nil {
+								fmt.Fprintln(os.Stdout, err.Error())
+							}
 						} else {
-							cmd := exec.Command("pwd")
+							args := make([]string, 0)
+							args = append(args, arg[1:]...)
+							cmd := exec.Command("ls", args...)
 							cmd.Stdout = os.Stdout
-							cmd.Run()
+							err := cmd.Run()
+							if err != nil {
+								fmt.Fprintln(os.Stdout, err.Error())
+							}
 						}*/
 			cur, _ := os.Getwd()
 			fmt.Fprintln(os.Stdout, cur)
@@ -60,9 +72,38 @@ func main() {
 			cmd.Run()
 		case "kill":
 			pid, _ := strconv.Atoi(arg[1])
-			fmt.Fprintln(os.Stdout, KillProcess(pid))
+			if err := KillProcess(pid); err == nil {
+				fmt.Fprintln(os.Stdout, "Process with PID", pid, "killed")
+			} else {
+				fmt.Fprintln(os.Stdout, "Unable to kil process with PID", pid, "Error:", err.Error())
+			}
 		case "ps":
 			cmd := exec.Command("tasklist")
+			cmd.Stdout = os.Stdout
+			cmd.Run()
+		case "exec":
+			env := os.Environ()
+			binary, err := exec.LookPath(arg[1])
+			if err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+				continue
+			}
+			if err := syscall.Exec(binary, arg[2:], env); err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+			}
+		case "fork":
+			env := os.Environ()
+			binary, err := exec.LookPath(arg[1])
+			if err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+				continue
+			}
+			if err := syscall.ForkExec(binary, arg[2:], env); err != nil {
+				fmt.Fprintln(os.Stdout, err.Error())
+			}
+		default:
+			arg = arg[1:]
+			cmd := exec.Command(cmd, arg...)
 			cmd.Stdout = os.Stdout
 			cmd.Run()
 		}
