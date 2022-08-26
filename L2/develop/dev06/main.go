@@ -118,6 +118,8 @@ func main() {
 		str := strings.Join(collector, *outDelimiter)
 		output = append(output, str)
 	}
+
+	// Print result
 	for _, v := range output {
 		fmt.Fprintln(os.Stdout, v)
 	}
