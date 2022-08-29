@@ -1,4 +1,4 @@
-module github.com/dingowd/WB/L2/10
+module github.com/dingowd/WB/L2/develop/dev10
 
 go 1.18
 
