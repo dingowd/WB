@@ -44,6 +44,9 @@ func GetLinks(URL string, depth, level int, links *map[string]struct{}) {
 		}
 	}
 	f(doc)
+	for k, _ := range *links {
+		GetLinks(k, depth, level+1, links)
+	}
 	return
 }
 
@@ -93,32 +96,79 @@ func download(link, to string, links *map[string]struct{}) {
 	for k, _ := range *links {
 		u, err := url.Parse(k)
 		if err != nil {
-			fmt.Println("97:", err.Error())
+			fmt.Fprintln(os.Stderr, err.Error())
 		}
 		if !u.IsAbs() {
-			l, err := url.Parse(link)
-			if err != nil {
-				fmt.Println("102:", err.Error())
+			dir, file := filepath.Split(k)
+			if file == "" {
+				continue
 			}
-			/*			if !strings.HasSuffix(to, "/") || !strings.HasSuffix(to, "\\") {
-						to = to + "/"
-					}*/
-			toCreateDir := to + "/" + l.Host + filepath.Dir(k)
-			os.MkdirAll(toCreateDir, 0777)
-			fileToDownload := l.Scheme + "://" + l.Host + filepath.Dir(k) + "/" + filepath.Base(k)
-			fileToDownload = strings.ReplaceAll(fileToDownload, `\`, "/")
-			get, err := http.Get(fileToDownload)
+			f, err := url.Parse(file)
 			if err != nil {
-				fmt.Println("110:", err.Error())
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
 			}
-			fileToCreate := toCreateDir + "/" + filepath.Base(k)
-			f, err := os.Create(fileToCreate)
+			file = filepath.Base(f.Path)
+			fileToDownload := link + dir + file
+			if len(filepath.Ext(file)) < 2 {
+				file = file + ".html"
+			}
+			dirToCreate := filepath.Join(to, dir)
+			err = os.MkdirAll(dirToCreate, 0777)
 			if err != nil {
-				fmt.Println("117:", err.Error())
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
 			}
-			io.Copy(f, get.Body)
-			f.Close()
-			get.Body.Close()
+			fileToCreate := filepath.Join(dirToCreate, file)
+			req, err := http.Get(fileToDownload)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			local, err := os.Create(fileToCreate)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			io.Copy(local, req.Body)
+			req.Body.Close()
+			local.Close()
+		} else {
+			dir, file := filepath.Split(k)
+			f, err := url.Parse(file)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			file = filepath.Base(f.Path)
+			if filepath.Ext(file) == "" {
+				file = file + ".html"
+			}
+			dir = strings.ReplaceAll(dir, link, "")
+			if dir == "https://" || dir == "http://" {
+				dir = ""
+				file = "index.html"
+			}
+			dirToCreate := filepath.Join(to, dir)
+			err = os.MkdirAll(dirToCreate, 0777)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			fileToCreate := filepath.Join(dirToCreate, file)
+			local, err := os.Create(fileToCreate)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			req, err := http.Get(k)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err.Error())
+				continue
+			}
+			io.Copy(local, req.Body)
+			req.Body.Close()
+			local.Close()
 		}
 	}
 }
@@ -127,6 +177,20 @@ func main() {
 	depth := 2
 	link := "https://www.win-rar.com/"
 	to := "e:/download"
+	u, err := url.Parse(link)
+	if u.Host == "" {
+		fmt.Fprintln(os.Stderr, "Link is not valid")
+		return
+	}
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+	to = strings.ReplaceAll(to, `\`, "/")
+	if !strings.HasSuffix(to, "/") {
+		to = to + "/"
+	}
+	to = to + u.Host
 	refs := make(map[string]struct{})
 	GetLinks(link, depth, 1, &refs)
 	for k, _ := range refs {
@@ -146,4 +210,7 @@ func main() {
 	download(link, to, &src)
 	download(link, to, &refs)
 
+	/*	check := make(map[string]struct{})
+		check["https://www.win-rar.com"] = struct{}{}
+		download(link, to, &check)*/
 }
