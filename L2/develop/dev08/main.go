@@ -59,9 +59,15 @@ func main() {
 				fmt.Fprintln(os.Stdout, "Unable to kil process with PID", pid, "Error:", err.Error())
 			}
 		case "ps":
-			cmd := exec.Command("tasklist")
-			cmd.Stdout = os.Stdout
-			cmd.Run()
+			if strings.ToLower(sys) == "windows_nt" {
+				cmd := exec.Command("tasklist")
+				cmd.Stdout = os.Stdout
+				cmd.Run()
+			} else {
+				cmd := exec.Command("ps", arg[1:]...)
+				cmd.Stdout = os.Stdout
+				cmd.Run()
+			}
 		case "exec":
 			env := os.Environ()
 			binary, err := exec.LookPath(arg[1])
@@ -69,25 +75,52 @@ func main() {
 				fmt.Fprintln(os.Stdout, err.Error())
 				continue
 			}
-			if err := syscall.Exec(binary, arg[2:], env); err != nil {
+			if len(arg) == 1 {
+				continue
+			}
+			args := make([]string, 0)
+			if len(arg) >= 3 {
+				args = arg[2:]
+			} else {
+				args = append(args, "")
+			}
+			if err := syscall.Exec(binary, args, env); err != nil {
 				fmt.Fprintln(os.Stdout, err.Error())
 			}
 		case "fork":
-			env := os.Environ()
 			binary, err := exec.LookPath(arg[1])
+			attr := syscall.ProcAttr{
+				"",
+				[]string{},
+				[]uintptr{},
+				nil,
+			}
 			if err != nil {
 				fmt.Fprintln(os.Stdout, err.Error())
 				continue
 			}
-			if err := syscall.ForkExec(binary, arg[2:], env); err != nil {
-				fmt.Fprintln(os.Stdout, err.Error())
+			if len(arg) == 1 {
+				continue
+			}
+			args := make([]string, 0)
+			if len(arg) >= 3 {
+				args = arg[2:]
+			} else {
+				args = append(args, "")
+			}
+			if _, err := syscall.ForkExec(binary, args, &attr); err != nil { // nolint: gocritic
+				fmt.Fprintln(os.Stdout, err.Error()) // nolint: gocritic
 			}
 		default:
-			arg = arg[1:]
-			cmd := exec.Command(cmd, arg...)
+			args := make([]string, 0)
+			if len(arg) == 1 {
+				args = append(args, "")
+			} else {
+				arg = arg[1:]
+			}
+			cmd := exec.Command(cmd, args...)
 			cmd.Stdout = os.Stdout
 			cmd.Run()
 		}
 	}
-
 }
