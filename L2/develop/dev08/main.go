@@ -44,25 +44,6 @@ func main() {
 		case "cd":
 			os.Chdir(arg[1])
 		case "pwd":
-			/*			if sys == "Windows_NT" {
-							args := make([]string, 0)
-							args = append(args, "/A", "cd")
-							cmd := exec.Command("cmd.exe", args...)
-							cmd.Stdout = os.Stdout
-							err := cmd.Run()
-							if err != nil {
-								fmt.Fprintln(os.Stdout, err.Error())
-							}
-						} else {
-							args := make([]string, 0)
-							args = append(args, arg[1:]...)
-							cmd := exec.Command("ls", args...)
-							cmd.Stdout = os.Stdout
-							err := cmd.Run()
-							if err != nil {
-								fmt.Fprintln(os.Stdout, err.Error())
-							}
-						}*/
 			cur, _ := os.Getwd()
 			fmt.Fprintln(os.Stdout, cur)
 		case "echo":
