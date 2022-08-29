@@ -51,7 +51,6 @@ func GetLinks(URL string, depth, level int, links *map[string]struct{}) {
 func FilterLinks(links *map[string]struct{}, link string, logger *Lrus) {
 	u, _ := url.Parse(link)
 	for k, _ := range *links {
-		logger.Info(k)
 		l, _ := url.Parse(k)
 		if l.IsAbs() {
 			if u.Host != l.Host {
@@ -190,6 +189,8 @@ func convLinks(dir, link string, logger *Lrus) {
 		logger.Error(err.Error())
 		return
 	}
+	u, _ := url.Parse(link)
+	toChange := u.Scheme + "://" + u.Host + "/"
 	for _, v := range files {
 		file, err := os.Open(v)
 		if err != nil {
@@ -205,8 +206,9 @@ func convLinks(dir, link string, logger *Lrus) {
 		fileScanner := bufio.NewScanner(file)
 		for fileScanner.Scan() {
 			text := fileScanner.Text()
-			text = strings.ReplaceAll(text, "https://", (dir + "/"))
-			text = strings.ReplaceAll(text, "http://", (dir + "/"))
+			text = strings.ReplaceAll(text, toChange, "./")
+			text = strings.ReplaceAll(text, `href="/`, `href="./`)
+			text = strings.ReplaceAll(text, `src="/`, `src="./`)
 			text = text + "\n"
 			newFile.WriteString(text)
 		}
