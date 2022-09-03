@@ -42,6 +42,9 @@ func main() {
 		cmd := strings.ToLower(arg[0])
 		switch cmd {
 		case "cd":
+			if len(arg) < 2 {
+				continue
+			}
 			os.Chdir(arg[1])
 		case "pwd":
 			cur, _ := os.Getwd()
