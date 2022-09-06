@@ -67,11 +67,20 @@ func main() {
 				cmd.Stdout = os.Stdout
 				cmd.Run()
 			} else {
-				cmd := exec.Command("ps", arg[1:]...)
+				var cmd *exec.Cmd
+				if len(arg) < 2 {
+					cmd = exec.Command("ps", "")
+				}
+				cmd = exec.Command("ps", arg[1:]...)
 				cmd.Stdout = os.Stdout
 				cmd.Run()
 			}
 		case "exec":
+			sys, _ := os.LookupEnv("OS")
+			if strings.ToLower(sys) == "windows_nt" {
+				fmt.Fprintln(os.Stdout, "Windows unsupported exec")
+				continue
+			}
 			env := os.Environ()
 			binary, err := exec.LookPath(arg[1])
 			if err != nil {
@@ -91,6 +100,11 @@ func main() {
 				fmt.Fprintln(os.Stdout, err.Error())
 			}
 		case "fork":
+			sys, _ := os.LookupEnv("OS")
+			if strings.ToLower(sys) == "windows_nt" {
+				fmt.Fprintln(os.Stdout, "Windows unsupported exec")
+				continue
+			}
 			binary, err := exec.LookPath(arg[1])
 			attr := syscall.ProcAttr{
 				"",
