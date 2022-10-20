@@ -54,7 +54,7 @@ func main() {
 		os.Exit(1) // nolint:gocritic
 	}
 	defer store.Close()
-
+	// getting weather from API with interval in seconds
 	go func() {
 		for {
 			select {
@@ -64,7 +64,7 @@ func main() {
 				logg.Info("Getting weather from API")
 				store.GetWeather()
 				logg.Info("Got weather from API")
-				time.Sleep(time.Minute)
+				time.Sleep(time.Second * time.Duration(conf.Interval))
 			}
 		}
 	}()

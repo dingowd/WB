@@ -1,8 +1,13 @@
+#to connect db
 dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+#http server parameters
 httpsrv = "127.0.0.1:3541"
+#external API key
 appid = "effe2454b05e87a8f799b78681cbd4e1"
+#interval to get weather by API
 interval = 60
 
+#logger parameters
 [logger]
 level = "INFO"
 logfile = "./log.txt"
