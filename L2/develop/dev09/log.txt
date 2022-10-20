@@ -1,0 +1,2 @@
+time="08-09-2022 08:55:25" level=info msg="Depth to download: 5"
+time="08-09-2022 08:55:27" level=info msg="Downloaded https://www.win-rar.com/fileadmin/winrar-versions/winrar/winrar-x64-611ru.exe to e:/download"

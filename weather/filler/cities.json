@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Москва",
+    "country": "RU"
+  },
+  {
+    "name": "Йошкар-Ола",
+    "country": "RU"
+  },
+  {
+    "name": "Казань",
+    "country": "RU"
+  },
+  {
+    "name": "Санкт-Петербург",
+    "country": "RU"
+  },
+  {
+    "name": "Лондон",
+    "country": "GB"
+  },
+  {
+    "name": "Париж",
+    "country": "FR"
+  },
+  {
+    "name": "Марсель",
+    "country": "FR"
+  },
+  {
+    "name": "Нью-Йорк",
+    "country": "US"
+  },
+  {
+    "name": "Алма-Ата",
+    "country": "KZ"
+  },
+  {
+    "name": "Тюмень",
+    "country": "RU"
+  },
+  {
+    "name": "Владивосток",
+    "country": "RU"
+  },
+  {
+    "name": "Уфа",
+    "country": "RU"
+  },
+  {
+    "name": "Воронеж",
+    "country": "RU"
+  },
+  {
+    "name": "Белгород",
+    "country": "RU"
+  },
+  {
+    "name": "Томск",
+    "country": "RU"
+  },
+  {
+    "name": "Чебоксары",
+    "country": "RU"
+  },
+  {
+    "name": "Салехард",
+    "country": "RU"
+  },
+  {
+    "name": "Нижний Новгород",
+    "country": "RU"
+  },
+  {
+    "name": "Челябинск",
+    "country": "RU"
+  },
+  {
+    "name": "Самара",
+    "country": "RU"
+  }
+]

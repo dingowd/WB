@@ -1,0 +1,11 @@
+dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+httpsrv = "127.0.0.1:3541"
+appid = "effe2454b05e87a8f799b78681cbd4e1"
+
+[logger]
+level = "INFO"
+logfile = "./L0/log.txt"
+
+
+# TODO
+# ...

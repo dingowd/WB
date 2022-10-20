@@ -1,0 +1,3 @@
+dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+file = "cities.json"
+appid = "effe2454b05e87a8f799b78681cbd4e1"
