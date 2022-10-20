@@ -43,6 +43,7 @@ type List struct {
 }
 
 type Resp struct {
+	CityId  int    `json:"-"`
 	Cod     string `json:"cod"`
 	Message int    `json:"message"`
 	Cnt     int    `json:"cnt"`

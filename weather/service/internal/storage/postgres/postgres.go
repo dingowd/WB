@@ -40,8 +40,23 @@ func (s *Storage) Close() error {
 	return s.DB.Close()
 }
 
-func (s *Storage) GetCities() error {
-	return nil
+func (s *Storage) GetCities() ([]models.City, error) {
+	cities := make([]models.City, 0)
+	query := `select city_id, name, lat, lon, country, state from cities order by name asc`
+	rows, err := s.DB.QueryContext(context.Background(), query)
+	if err != nil {
+		return cities, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var city models.City
+		err := rows.Scan(&city.CityId, &city.Name, &city.Lat, &city.Lon, &city.Country, &city.State)
+		if err != nil {
+			continue
+		}
+		cities = append(cities, city)
+	}
+	return cities, nil
 
 }
 
@@ -62,41 +77,41 @@ func (s *Storage) GetWeather() error {
 	query := `truncate table weather`
 	s.DB.Exec(query)
 	// получаем список городов из базы
-	cities := make([]models.City, 0)
-	query = `select city_id, name, lat, lon, country, state from cities`
-	rows, err := s.DB.QueryContext(context.Background(), query)
+	cities, err := s.GetCities()
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var city models.City
-		err := rows.Scan(&city.CityId, &city.Name, &city.Lat, &city.Lon, &city.Country, &city.State)
-		if err != nil {
-			continue
-		}
-		cities = append(cities, city)
-	}
 	// получаем погоду по API
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 	w := make([]models.Resp, 0)
 	for _, v := range cities {
-		var elem models.Resp
-		req := "http://api.openweathermap.org/data/2.5/forecast?lat=" +
-			fmt.Sprint(v.Lat) + "&lon=" + fmt.Sprint(v.Lon) + "&units=metric&appid=" + s.AppId
-		resp, err := http.Get(req)
-		if err != nil {
-			continue
-		}
-		json.NewDecoder(resp.Body).Decode(&elem)
-		w = append(w, elem)
+		wg.Add(1)
+		go func(v models.City) {
+			defer wg.Done()
+			var elem models.Resp
+			req := "http://api.openweathermap.org/data/2.5/forecast?lat=" +
+				fmt.Sprint(v.Lat) + "&lon=" + fmt.Sprint(v.Lon) + "&units=metric&appid=" + s.AppId
+			resp, err := http.Get(req)
+			if err != nil {
+				return
+			}
+			json.NewDecoder(resp.Body).Decode(&elem)
+			defer resp.Body.Close()
+			elem.CityId = v.CityId
+			mu.Lock()
+			w = append(w, elem)
+			mu.Unlock()
+		}(v)
 	}
+	wg.Wait()
 	// запись в бд
 	t := time.Now().Format("02.01.2006")
 	query = `insert into weather(city_id, date, temp, detail) values($1, $2, $3, $4)`
 	for i := 0; i < len(cities); i++ {
 		temp := w[i].List[1].Main.Temp
 		j, _ := json.Marshal(w[i])
-		s.DB.ExecContext(context.Background(), query, cities[i].CityId, t, temp, j)
+		s.DB.ExecContext(context.Background(), query, w[i].CityId, t, temp, j)
 	}
 
 	return nil

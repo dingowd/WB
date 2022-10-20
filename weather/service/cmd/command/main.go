@@ -5,12 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/dingowd/WB/weather/service/internal/app"
 	"github.com/dingowd/WB/weather/service/internal/config"
 	"github.com/dingowd/WB/weather/service/internal/logger/lrus"
+	internalhttp "github.com/dingowd/WB/weather/service/internal/server/http"
 	"github.com/dingowd/WB/weather/service/internal/storage"
 	"github.com/dingowd/WB/weather/service/internal/storage/postgres"
-
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 var configFile string
@@ -48,4 +52,23 @@ func main() {
 		store.Close()
 	}()
 	store.GetWeather()
+
+	// init application
+	weather := app.New(logg, store)
+
+	// init http server
+	server := internalhttp.NewServer(weather, conf.HTTPSrv)
+
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-exit
+		logg.Info("Weather service stopping...")
+		server.Stop()
+		logg.Info("Weather service stopped")
+		time.Sleep(5 * time.Second)
+	}()
+	logg.Info("Weather service is running...")
+
+	server.Start()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"os"
+	"sync"
 )
 
 type CityShort struct {
@@ -17,12 +18,17 @@ type CityShort struct {
 }
 type CityShortList []CityShort
 
+type LocalNames struct {
+	Ru string `json:"ru"`
+}
+
 type City struct {
-	Name    string  `json:"name" db:"name"`
-	Lat     float64 `json:"lat" db:"lat"`
-	Lon     float64 `json:"lon" db:"lon"`
-	Country string  `json:"country" db:"country"`
-	State   string  `json:"state" db:"state"`
+	Name       string     `json:"name" db:"name"`
+	LocalNames LocalNames `json:"local_names"`
+	Lat        float64    `json:"lat" db:"lat"`
+	Lon        float64    `json:"lon" db:"lon"`
+	Country    string     `json:"country" db:"country"`
+	State      string     `json:"state" db:"state"`
 }
 type CityList []City
 
@@ -45,16 +51,31 @@ func main() {
 	data, _ := os.ReadFile(conf.File)
 	json.Unmarshal(data, cities)
 	// Fill array to write to db
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 	for i := 0; i < len(*cities); i++ {
-		url := "http://api.openweathermap.org/geo/1.0/direct?q=" + (*cities)[i].Name + "," +
-			(*cities)[i].State + "," + (*cities)[i].Country + "&limit=5&appid=" + conf.Appid
-		resp, err := http.Get(url)
-		if err != nil {
-			return
+		wg.Add(1)
+		go func(i int) {
+			url := "http://api.openweathermap.org/geo/1.0/direct?q=" + (*cities)[i].Name + "," +
+				(*cities)[i].State + "," + (*cities)[i].Country + "&limit=5&appid=" + conf.Appid
+			resp, err := http.Get(url)
+			if err != nil {
+				return
+			}
+			var c CityList
+			json.NewDecoder(resp.Body).Decode(&c)
+			mu.Lock()
+			citiesToDB = append(citiesToDB, c[len(c)-1])
+			mu.Unlock()
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	// array processing
+	for i := 0; i < len(citiesToDB); i++ {
+		if len(citiesToDB[i].LocalNames.Ru) > 0 {
+			citiesToDB[i].Name = citiesToDB[i].LocalNames.Ru
 		}
-		var c CityList
-		json.NewDecoder(resp.Body).Decode(&c)
-		citiesToDB = append(citiesToDB, c[0])
 	}
 	// Connect to db
 	db, err := sqlx.Open("pgx", conf.DSN)

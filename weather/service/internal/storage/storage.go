@@ -9,7 +9,7 @@ import (
 type Storage interface {
 	Connect(ctx context.Context, dsn string) error
 	Close() error
-	GetCities() error
+	GetCities() ([]models.City, error)
 	ShortWeather(city string) (models.ShortWeather, error)
 	DetWeather(city string, t time.Time) (models.Resp, error)
 	GetWeather() error
