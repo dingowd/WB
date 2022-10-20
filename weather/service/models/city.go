@@ -5,6 +5,6 @@ type City struct {
 	Name    string  `json:"name" db:"name"`
 	Lat     float64 `json:"-" db:"lat"`
 	Lon     float64 `json:"-" db:"lon"`
-	Country string  `json:"-" db:"country"`
-	State   string  `json:"-" db:"state"`
+	Country string  `json:"country" db:"country"`
+	State   string  `json:"state" db:"state"`
 }

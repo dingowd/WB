@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/dingowd/WB/weather/service/internal/logger"
 	"github.com/dingowd/WB/weather/service/models"
@@ -62,14 +63,59 @@ func (s *Storage) GetCities() ([]models.City, error) {
 
 func (s *Storage) ShortWeather(city string) (models.ShortWeather, error) {
 	var short models.ShortWeather
+	query := `select detail, country from weather inner join cities on weather.city_id = cities.city_id where cities.name = $1`
+	row := s.DB.QueryRow(query, city)
+	var result, country string
+	err := row.Scan(&result, &country)
+	if err != nil {
+		return short, err
+	}
+	var full models.Resp
+	json.Unmarshal([]byte(result), &full)
+	var av, count float64
+	for _, v := range full.List {
+		av += (v.Main.TempMin + v.Main.TempMax) / 2
+		count++
+	}
+	av = av / count
+	tm := time.Now()
+	for i := 0; i < 6; i++ {
+		short.Dates = append(short.Dates, tm.Format("02.01.2006"))
+		tm = tm.Add(time.Hour * 24)
+	}
+	short.Country = country
+	short.City = city
+	short.AvTemp = av
 	return short, nil
-
 }
 
-func (s *Storage) DetWeather(city string, t time.Time) (models.Resp, error) {
-	var resp models.Resp
-	return resp, nil
-
+func (s *Storage) DetWeather(city, date string) (models.Resp, error) {
+	var resp, answer models.Resp
+	_, err := time.Parse("02.01.2006", date)
+	if err != nil {
+		return answer, errors.New("Error. Please enter the date in dd.mm.yyyy format")
+	}
+	query := `select detail, country from weather inner join cities on weather.city_id = cities.city_id where cities.name = $1`
+	row := s.DB.QueryRow(query, city)
+	var result, country string
+	err = row.Scan(&result, &country)
+	if err != nil {
+		return answer, err
+	}
+	json.Unmarshal([]byte(result), &resp)
+	answer.Cod = resp.Cod
+	answer.Message = resp.Message
+	answer.Cnt = resp.Cnt
+	for _, v := range resp.List {
+		t, err := time.Parse("2006-01-02 15:04:05", v.DtTxt)
+		if err != nil {
+			return answer, err
+		}
+		if date == t.Format("02.01.2006") {
+			answer.List = append(answer.List, v)
+		}
+	}
+	return answer, nil
 }
 
 func (s *Storage) GetWeather() error {

@@ -40,6 +40,7 @@ type List struct {
 	Visibility int       `json:"visibility"`
 	Pop        int       `json:"pop"`
 	Sys        Sys       `json:"sys"`
+	DtTxt      string    `json:"dt_txt"`
 }
 
 type Resp struct {
@@ -51,7 +52,8 @@ type Resp struct {
 }
 
 type ShortWeather struct {
-	Country string
-	City    string
-	AvTemp  []float64
+	Country string   `json:"country"`
+	City    string   `json:"city"`
+	AvTemp  float64  `json:"av_temp"`
+	Dates   []string `json:"dates"`
 }

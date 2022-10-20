@@ -20,16 +20,21 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "./weather/service/config/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "../service/config/config.toml", "Path to configuration file")
 }
 
 func main() {
+	// graceful shutdown
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
 	// Init config
 	conf := config.NewConfig()
 	if _, err := toml.DecodeFile(configFile, &conf); err != nil {
 		fmt.Fprintln(os.Stdout, "ошибка чтения toml файла "+err.Error()+", установка параметров по умолчанию")
 		conf = config.Default()
 	}
+
 	// init logger
 	logg := lrus.New()
 	logg.SetLevel(conf.Logger.Level)
@@ -40,6 +45,7 @@ func main() {
 	} else {
 		logg.SetOutput(os.Stdout)
 	}
+
 	// init storage
 	var store storage.Storage
 	store = postgres.New(logg, conf.AppId)
@@ -47,11 +53,21 @@ func main() {
 		logg.Error("failed to connect database" + err.Error())
 		os.Exit(1) // nolint:gocritic
 	}
-	defer func() {
-		logg.Info("Закрытие соединения с БД")
-		store.Close()
+	defer store.Close()
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				break
+			default:
+				logg.Info("Getting weather from API")
+				store.GetWeather()
+				logg.Info("Got weather from API")
+				time.Sleep(time.Minute)
+			}
+		}
 	}()
-	store.GetWeather()
 
 	// init application
 	weather := app.New(logg, store)
@@ -59,10 +75,10 @@ func main() {
 	// init http server
 	server := internalhttp.NewServer(weather, conf.HTTPSrv)
 
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+	//exit := make(chan os.Signal, 1)
+	//signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		<-exit
+		<-ctx.Done()
 		logg.Info("Weather service stopping...")
 		server.Stop()
 		logg.Info("Weather service stopped")

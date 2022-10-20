@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"github.com/dingowd/WB/weather/service/models"
-	"time"
 )
 
 type Storage interface {
@@ -11,6 +10,6 @@ type Storage interface {
 	Close() error
 	GetCities() ([]models.City, error)
 	ShortWeather(city string) (models.ShortWeather, error)
-	DetWeather(city string, t time.Time) (models.Resp, error)
+	DetWeather(city, t string) (models.Resp, error)
 	GetWeather() error
 }
