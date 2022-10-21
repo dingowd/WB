@@ -1,0 +1,3 @@
+time="20-10-2022 20:00:17" level=info msg="База user=postgres dbname=WB sslmode=disable password=masterkey подключена"
+time="20-10-2022 20:00:17" level=info msg="База user=postgres dbname=WB sslmode=disable password=masterkey подключена"
+time="20-10-2022 20:00:17" level=info msg="http сервер запускается"

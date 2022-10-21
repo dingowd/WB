@@ -42,18 +42,35 @@ type List struct {
 	Sys        Sys       `json:"sys"`
 	DtTxt      string    `json:"dt_txt"`
 }
+type Coord struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+type CityProp struct {
+	Id         int    `json:"id"`
+	Name       string `json:"name"`
+	Coord      Coord  `json:"coord"`
+	Country    string `json:"country"`
+	Population int    `json:"population"`
+	Timezone   int    `json:"timezone"`
+	Sunrise    int    `json:"sunrise"`
+	Sunset     int    `json:"sunset"`
+}
 
 type Resp struct {
-	CityId  int    `json:"-"`
-	Cod     string `json:"cod"`
-	Message int    `json:"message"`
-	Cnt     int    `json:"cnt"`
-	List    []List `json:"list"`
+	CityId  int      `json:"-"`
+	Cod     string   `json:"cod"`
+	Message int      `json:"message"`
+	Cnt     int      `json:"cnt"`
+	List    []List   `json:"list"`
+	City    CityProp `json:"city"`
 }
 
 type ShortWeather struct {
 	Country string   `json:"country"`
 	City    string   `json:"city"`
+	Date    string   `json:"date"`
 	AvTemp  float64  `json:"av_temp"`
 	Dates   []string `json:"dates"`
 }

@@ -20,7 +20,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "../service/config/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "./config/config.toml", "Path to configuration file")
 }
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	// Init config
+	// init config
 	conf := config.NewConfig()
 	if _, err := toml.DecodeFile(configFile, &conf); err != nil {
 		fmt.Fprintln(os.Stdout, "ошибка чтения toml файла "+err.Error()+", установка параметров по умолчанию")
@@ -75,8 +75,7 @@ func main() {
 	// init http server
 	server := internalhttp.NewServer(weather, conf.HTTPSrv)
 
-	//exit := make(chan os.Signal, 1)
-	//signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
+	// graceful shutdown
 	go func() {
 		<-ctx.Done()
 		logg.Info("Weather service stopping...")
@@ -86,5 +85,6 @@ func main() {
 	}()
 	logg.Info("Weather service is running...")
 
+	// start http server
 	server.Start()
 }

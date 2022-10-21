@@ -57,7 +57,7 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			url := "http://api.openweathermap.org/geo/1.0/direct?q=" + (*cities)[i].Name + "," +
-				(*cities)[i].State + "," + (*cities)[i].Country + "&limit=5&appid=" + conf.Appid
+				(*cities)[i].State + "," + (*cities)[i].Country + "&limit=1&appid=" + conf.Appid
 			resp, err := http.Get(url)
 			if err != nil {
 				return
@@ -65,7 +65,7 @@ func main() {
 			var c CityList
 			json.NewDecoder(resp.Body).Decode(&c)
 			mu.Lock()
-			citiesToDB = append(citiesToDB, c[len(c)-1])
+			citiesToDB = append(citiesToDB, c[0])
 			mu.Unlock()
 			wg.Done()
 		}(i)

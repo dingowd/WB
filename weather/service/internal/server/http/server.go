@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/dingowd/WB/weather/service/internal/app"
 	"github.com/dingowd/WB/weather/service/utils"
+	"html/template"
 
 	"net/http"
 )
@@ -45,14 +46,20 @@ func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError("Error getting list of cities"))
 		return
 	}
-	b, err := json.MarshalIndent(cities, "\t", "\t")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.ReturnError("Error getting list of cities"))
-		return
+	tmpl, errT := template.ParseFiles("./templates/cities.html")
+	if errT != nil {
+		b, err := json.Marshal(cities)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(utils.ReturnError("Error getting list of cities"))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(b)
+	} else {
+		tmpl.Execute(w, cities)
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(b)
 }
 
 func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
@@ -73,15 +80,20 @@ func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
 		return
 	}
-	b, err := json.Marshal(short)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
-		return
+	tmpl, errT := template.ParseFiles("./templates/short.html")
+	if errT != nil {
+		b, err := json.Marshal(short)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(b)
+	} else {
+		tmpl.Execute(w, short)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(b)
 }
 
 func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {

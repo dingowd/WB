@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Список городов</title>
+</head>
+<body>
+<h2>Список городов</h2>
+<ul>
+    {{range .}}
+    <li><b>{{ .Name}}</b></li>
+    <li><b>{{ .Country}}</b></li>
+    <li><b>{{ .State}}</b></li>
+    <p></p>
+    {{end}}
+</ul>
+</body>
+</html>
