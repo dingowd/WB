@@ -42,6 +42,7 @@ type List struct {
 	Sys        Sys       `json:"sys"`
 	DtTxt      string    `json:"dt_txt"`
 }
+
 type Coord struct {
 	Lat float64 `json:"lat"`
 	Lon float64 `json:"lon"`
@@ -73,4 +74,14 @@ type ShortWeather struct {
 	Date    string   `json:"date"`
 	AvTemp  float64  `json:"av_temp"`
 	Dates   []string `json:"dates"`
+}
+
+type RespWithDate struct {
+	CityId  int      `json:"-"`
+	Date    string   `json:"date"`
+	Cod     string   `json:"cod"`
+	Message int      `json:"message"`
+	Cnt     int      `json:"cnt"`
+	List    []List   `json:"list"`
+	City    CityProp `json:"city"`
 }

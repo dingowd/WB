@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/dingowd/WB/weather/service/internal/app"
+	"github.com/dingowd/WB/weather/service/models"
 	"github.com/dingowd/WB/weather/service/utils"
 	"html/template"
 
@@ -115,15 +116,24 @@ func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
 		return
 	}
-	b, err := json.Marshal(result)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
-		return
+	tmpl, errT := template.ParseFiles("./templates/detail.html")
+	if errT != nil {
+		b, err := json.Marshal(result)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(utils.ReturnError("Error getting weather in " + name + ". " + err.Error()))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(b)
+	} else {
+		var resWithDate models.RespWithDate
+		resWithDate.Date = date
+		resWithDate.City = result.City
+		resWithDate.List = append(resWithDate.List, result.List...)
+		tmpl.Execute(w, resWithDate)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(b)
 }
 
 func (s *Server) Start() error {

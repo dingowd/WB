@@ -2,18 +2,33 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Краткий прогноз</title>
+    <title>Детальный прогноз</title>
 </head>
 <body>
-<h2>Краткий прогноз</h2>
-<p><b>Страна: </b>{{ .Country}}</p>
-<p><b>Город: </b>{{ .City}}</p>
+<h2>Детальный прогноз</h2>
+<p><b>Страна: </b>{{ .City.Country}}</p>
+<p><b>Город: </b>{{ .City.Name}}</p>
 <p><b>Дата: </b>{{ .Date}}</p>
-<p><b>Средняя температура: </b>{{ .AvTemp}}</p>
-<p><b>Даты прогноза: </b></p>
 <ul>
-    {{range .Dates}}
-    <li><b>{{.}}</b></li>
+    {{range .List}}
+    <p></p>
+    <p></p>
+    <p><b>Время: </b>{{ .DtTxt}}</p>
+    <p><b>Основное: </b></p>
+    <li><b>Температура: </b>{{ .Main.Temp}} гр.Ц.</li>
+    <li><b>Ощущается как: </b>{{ .Main.FeelsLike}} гр.Ц.</li>
+    <li><b>Минимальная температура: </b>{{ .Main.TempMin}} гр.Ц.</li>
+    <li><b>Максимальная температура: </b>{{ .Main.TempMax}} гр.Ц.</li>
+    <li><b>Атмосферное давление: </b>{{ .Main.Pressure}} мм.рт.ст</li>
+    <li><b>Влажность: </b>{{ .Main.Humidity}} %</li>
+    <p><b>Погода: </b></p>
+    {{range .Weather}}
+    <li><b></b>{{ .Description}}</li>
+    {{end}}
+    <p><b>Ветер: </b></p>
+    <li><b>Скорость: </b>{{ .Wind.Speed}} м.с.</li>
+    <li><b>Направление: </b>{{ .Wind.Deg}}</li>
+    <li><b>Порывы до: </b>{{ .Wind.Gust}} м.с.</li>
     <p></p>
     {{end}}
 </ul>
