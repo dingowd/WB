@@ -64,6 +64,7 @@ func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
+	s.App.Storage.Wait()
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(utils.ReturnError("Method isn`t GET"))
@@ -98,6 +99,7 @@ func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
+	s.App.Storage.Wait()
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(utils.ReturnError("Method isn`t GET"))

@@ -16,6 +16,7 @@ import (
 )
 
 type Storage struct {
+	WG    sync.WaitGroup
 	DB    *sqlx.DB
 	Log   logger.Logger
 	AppId string
@@ -126,9 +127,6 @@ func (s *Storage) DetWeather(city, date string) (models.Resp, error) {
 }
 
 func (s *Storage) GetWeather() error {
-	// чистим таблицу
-	query := `truncate table weather`
-	s.DB.Exec(query)
 	// получаем список городов из базы
 	cities, err := s.GetCities()
 	if err != nil {
@@ -158,6 +156,10 @@ func (s *Storage) GetWeather() error {
 		}(v)
 	}
 	wg.Wait()
+	// чистим таблицу
+	s.WG.Add(1)
+	query := `truncate table weather`
+	s.DB.Exec(query)
 	// запись в бд
 	t := time.Now().Format("02.01.2006")
 	query = `insert into weather(city_id, date, temp, detail) values($1, $2, $3, $4)`
@@ -176,5 +178,12 @@ func (s *Storage) GetWeather() error {
 		j, _ := json.Marshal(w[i])
 		s.DB.ExecContext(context.Background(), query, w[i].CityId, t, temp, j)
 	}
+	s.WG.Done()
 	return nil
+}
+
+func (s *Storage) Wait() {
+	s.Log.Info("Waiting for GetWheather")
+	s.WG.Wait()
+	s.Log.Info("GetWheather Done")
 }

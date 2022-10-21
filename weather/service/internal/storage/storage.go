@@ -12,4 +12,5 @@ type Storage interface {
 	ShortWeather(city string) (models.ShortWeather, error)
 	DetWeather(city, t string) (models.Resp, error)
 	GetWeather() error
+	Wait()
 }
