@@ -13,4 +13,7 @@ type Storage interface {
 	DetWeather(city, t string) (models.Resp, error)
 	GetWeather() error
 	Wait()
+	InsertUser(name string) error
+	InsertFav(name, city string) error
+	GetFavor(name string) ([]string, error)
 }

@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"time"
 )
 
@@ -183,7 +184,72 @@ func (s *Storage) GetWeather() error {
 }
 
 func (s *Storage) Wait() {
-	s.Log.Info("Waiting for GetWheather")
 	s.WG.Wait()
 	s.Log.Info("GetWheather Done")
+}
+
+func (s *Storage) InsertUser(name string) error {
+	query := `insert into favor(user_name) values($1)`
+	_, err := s.DB.Exec(query, name)
+	return err
+}
+
+func (s *Storage) InsertFav(name, city string) error {
+	// Проверка существования пользователя в базе
+	if !s.IsUserExist(name) {
+		return errors.New("user is not exist")
+	}
+	// Проверка существования города в базе
+	if !s.IsCityExist(city) {
+		return errors.New("city is not exist")
+	}
+	query := `select favor from favor where user_name = $1`
+	var cities []string
+	if err := s.DB.QueryRow(query, name).Scan(pq.Array(&cities)); err != nil {
+		return err
+	}
+	// Проверка города на входимость для исключения дупликации
+	flag := false
+	for _, v := range cities {
+		if v == city {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		cities = append(cities, city)
+	} else {
+		return errors.New("city already in favorities")
+	}
+	// Обновляем избранные города
+	query = `update favor set favor = $1 where user_name = $2`
+	if _, err := s.DB.Exec(query, pq.Array(cities), name); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) GetFavor(name string) ([]string, error) {
+	var res []string
+	query := `select favor from favor where user_name = $1`
+	err := s.DB.QueryRow(query, name).Scan(pq.Array(&res))
+	return res, err
+}
+
+func (s *Storage) IsUserExist(name string) bool {
+	query := `select user_name from favor where user_name = $1`
+	var res string
+	if err := s.DB.QueryRow(query, name).Scan(&res); err != nil {
+		return false
+	}
+	return true
+}
+
+func (s *Storage) IsCityExist(city string) bool {
+	query := `select name from cities where name = $1`
+	var c string
+	if err := s.DB.QueryRow(query, city).Scan(&c); err != nil {
+		return false
+	}
+	return true
 }

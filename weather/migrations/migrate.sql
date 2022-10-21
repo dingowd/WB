@@ -34,3 +34,10 @@ create table if not exists weather
     temp real not null,
     detail JSONB not null
 );
+
+create table if not exists favor
+(
+    id serial primary key,
+    user_name text unique not null,
+    favor text[] not null default '{}'::text[]
+);
