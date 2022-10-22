@@ -34,6 +34,14 @@ type Request struct {
 	Msg string `json:"msg"`
 }
 
+// GetCities godoc
+// @Summary Список городов
+// @Description Получить список городов
+// @Produce json
+// @Success 200 {object} models.City
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /cities [get]
 func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -63,6 +71,15 @@ func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetShort godoc
+// @Summary Краткий прогноз
+// @Description Получить краткий прогноз
+// @Produce json
+// @Param city query string true "Название города"
+// @Success 200 {object} models.ShortWeather
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /short [get]
 func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "GET" {
@@ -98,6 +115,16 @@ func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetDetail godoc
+// @Summary Детальный прогноз
+// @Description Получить детальный прогноз
+// @Produce json
+// @Param city query string true "Название города"
+// @Param date query string true "Дата прогноза"
+// @Success 200 {object} models.Resp
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /detail [get]
 func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "GET" {
@@ -138,6 +165,15 @@ func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// InsertUser godoc
+// @Summary Добавить пользователя
+// @Description Добавить нового пользователя
+// @Produce json
+// @Param name query string true "Имя нового пользователя"
+// @Success 200 {object} utils.Res
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /insert_user [post]
 func (s *Server) InsertUser(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "POST" {
@@ -157,8 +193,21 @@ func (s *Server) InsertUser(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError(err.Error()))
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(utils.ReturnResult("User " + name + " added"))
 }
 
+// InsertFav godoc
+// @Summary Добавить избранное
+// @Description Добавить город в избранное
+// @Produce json
+// @Param name query string true "Имя пользователя"
+// @Param city query string true "Название нового города"
+// @Success 200 {object} utils.Res
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /insert_fav [post]
 func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "POST" {
@@ -179,8 +228,21 @@ func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 		w.Write(utils.ReturnError(err.Error()))
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(utils.ReturnResult("City " + city + " added"))
 }
 
+// GetShortFavor godoc
+// @Summary Краткий прогноз
+// @Description Получить краткий прогноз избранных городов
+// @Produce json
+// @Param name query string true "Имя пользователя"
+// @Param city query string true "Название города"
+// @Success 200 {object} models.ShortWeather
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /short_favor [get]
 func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "GET" {
@@ -197,7 +259,7 @@ func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 	favors, err := s.App.Storage.GetFavor(name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(utils.ReturnError("Error getting favorities of user " + name + ". " + err.Error()))
+		w.Write(utils.ReturnError("Error getting favorites of user " + name + ". " + err.Error()))
 		return
 	}
 	shorts := make([]models.ShortWeather, 0)
@@ -226,6 +288,16 @@ func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetDetailFavor godoc
+// @Summary Детальный прогноз
+// @Description Получить детальный прогноз избранных городов
+// @Produce json
+// @Param name query string true "Имя пользователя"
+// @Param date query string true "Дата прогноза"
+// @Success 200 {object} models.Resp
+// @Failure 400 {object} utils.Err
+// @Failure 500 {object} utils.Err
+// @Router /detail_favor [get]
 func (s *Server) GetDetailFavor(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
 	if r.Method != "GET" {
