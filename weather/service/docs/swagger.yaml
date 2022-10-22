@@ -1,0 +1,353 @@
+basePath: /
+definitions:
+  models.City:
+    properties:
+      country:
+        type: string
+      name:
+        type: string
+      state:
+        type: string
+    type: object
+  models.CityProp:
+    properties:
+      coord:
+        $ref: '#/definitions/models.Coord'
+      country:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      population:
+        type: integer
+      sunrise:
+        type: integer
+      sunset:
+        type: integer
+      timezone:
+        type: integer
+    type: object
+  models.Clouds:
+    properties:
+      all:
+        type: integer
+    type: object
+  models.Coord:
+    properties:
+      lat:
+        type: number
+      lon:
+        type: number
+    type: object
+  models.List:
+    properties:
+      clouds:
+        $ref: '#/definitions/models.Clouds'
+      dt:
+        type: integer
+      dt_txt:
+        type: string
+      main:
+        $ref: '#/definitions/models.Main'
+      pop:
+        type: integer
+      sys:
+        $ref: '#/definitions/models.Sys'
+      visibility:
+        type: integer
+      weather:
+        items:
+          $ref: '#/definitions/models.Weather'
+        type: array
+      wind:
+        $ref: '#/definitions/models.Wind'
+    type: object
+  models.Main:
+    properties:
+      feels_like:
+        type: number
+      grnd_level:
+        type: integer
+      humidity:
+        type: integer
+      pressure:
+        type: integer
+      sea_level:
+        type: integer
+      temp:
+        type: number
+      temp_kf:
+        type: integer
+      temp_max:
+        type: number
+      temp_min:
+        type: number
+    type: object
+  models.Resp:
+    properties:
+      city:
+        $ref: '#/definitions/models.CityProp'
+      cnt:
+        type: integer
+      cod:
+        type: string
+      list:
+        items:
+          $ref: '#/definitions/models.List'
+        type: array
+      message:
+        type: integer
+    type: object
+  models.ShortWeather:
+    properties:
+      av_temp:
+        type: number
+      city:
+        type: string
+      country:
+        type: string
+      date:
+        type: string
+      dates:
+        items:
+          type: string
+        type: array
+    type: object
+  models.Sys:
+    properties:
+      pod:
+        type: string
+    type: object
+  models.Weather:
+    properties:
+      description:
+        type: string
+      main:
+        type: string
+    type: object
+  models.Wind:
+    properties:
+      deg:
+        type: integer
+      gust:
+        type: number
+      speed:
+        type: number
+    type: object
+  utils.Err:
+    properties:
+      error:
+        type: string
+    type: object
+  utils.Res:
+    properties:
+      result:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: directtosun@mail.ru
+    name: dingowd
+  description: This is a weather service RestAPI.
+  title: RestAPI
+  version: "1.0"
+paths:
+  /cities:
+    get:
+      description: Получить список городов
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.City'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Список городов
+  /detail:
+    get:
+      description: Получить детальный прогноз
+      parameters:
+      - description: Название города
+        in: query
+        name: city
+        required: true
+        type: string
+      - description: Дата прогноза
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Resp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Детальный прогноз
+  /detail_favor:
+    get:
+      description: Получить детальный прогноз избранных городов
+      parameters:
+      - description: Имя пользователя
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Дата прогноза
+        in: query
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Resp'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Детальный прогноз
+  /insert_fav:
+    post:
+      description: Добавить город в избранное
+      parameters:
+      - description: Имя пользователя
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Название нового города
+        in: query
+        name: city
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Res'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Добавить избранное
+  /insert_user:
+    post:
+      description: Добавить нового пользователя
+      parameters:
+      - description: Имя нового пользователя
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Res'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Добавить пользователя
+  /short:
+    get:
+      description: Получить краткий прогноз
+      parameters:
+      - description: Название города
+        in: query
+        name: city
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ShortWeather'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Краткий прогноз
+  /short_favor:
+    get:
+      description: Получить краткий прогноз избранных городов
+      parameters:
+      - description: Имя пользователя
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Название города
+        in: query
+        name: city
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ShortWeather'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Err'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Err'
+      summary: Краткий прогноз
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

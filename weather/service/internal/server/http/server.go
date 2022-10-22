@@ -3,9 +3,12 @@ package internalhttp
 import (
 	"encoding/json"
 	"errors"
+	_ "github.com/dingowd/WB/weather/service/docs"
 	"github.com/dingowd/WB/weather/service/internal/app"
 	"github.com/dingowd/WB/weather/service/models"
 	"github.com/dingowd/WB/weather/service/utils"
+	"github.com/go-chi/chi"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"html/template"
 
 	"net/http"
@@ -239,7 +242,7 @@ func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param name query string true "Имя пользователя"
 // @Param city query string true "Название города"
-// @Success 200 {object} models.ShortWeather
+// @Success 200 {array} models.ShortWeather
 // @Failure 400 {object} utils.Err
 // @Failure 500 {object} utils.Err
 // @Router /short_favor [get]
@@ -294,7 +297,7 @@ func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param name query string true "Имя пользователя"
 // @Param date query string true "Дата прогноза"
-// @Success 200 {object} models.Resp
+// @Success 200 {array} models.Resp
 // @Failure 400 {object} utils.Err
 // @Failure 500 {object} utils.Err
 // @Router /detail_favor [get]
@@ -353,6 +356,12 @@ func (s *Server) GetDetailFavor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Start() error {
+	r := chi.NewRouter()
+
+	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:1323/swagger/doc.json")))
+
+	go http.ListenAndServe(":1323", r)
+
 	s.App.Logg.Info("http server starting")
 	mux := http.NewServeMux()
 	s.Srv = &http.Server{Addr: s.Addr, Handler: mux}
@@ -363,6 +372,8 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/insert_fav", loggingMiddleware(s.InsertFav, s.App.Logg))
 	mux.HandleFunc("/short_favor", loggingMiddleware(s.GetShortFavor, s.App.Logg))
 	mux.HandleFunc("/detail_favor", loggingMiddleware(s.GetDetailFavor, s.App.Logg))
+	//mux.HandleFunc("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:3541/swagger/doc.json")))
+
 	s.Srv.ListenAndServe()
 	return nil
 }

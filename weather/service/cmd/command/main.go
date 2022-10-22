@@ -23,6 +23,14 @@ func init() {
 	flag.StringVar(&configFile, "config", "./config/config.toml", "Path to configuration file")
 }
 
+// @title           RestAPI
+// @version         1.0
+// @description     This is a weather service RestAPI.
+// @contact.name   dingowd
+// @contact.email  directtosun@mail.ru
+// @host      localhost:8080
+// @BasePath  /
+// @securityDefinitions.basic  BasicAuth
 func main() {
 	// graceful shutdown
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
