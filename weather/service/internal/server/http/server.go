@@ -2,7 +2,6 @@ package internalhttp
 
 import (
 	"encoding/json"
-	"errors"
 	_ "github.com/dingowd/WB/weather/service/docs"
 	"github.com/dingowd/WB/weather/service/internal/app"
 	"github.com/dingowd/WB/weather/service/models"
@@ -22,19 +21,6 @@ type Server struct {
 
 func NewServer(app *app.App, addr string) *Server {
 	return &Server{App: app, Addr: addr}
-}
-
-var (
-	ErrorStopServer  = errors.New("timeout to stop server")
-	ErrorStartServer = errors.New("timeout to start server")
-)
-
-type Response struct {
-	Msg string `json:"msg"`
-}
-
-type Request struct {
-	Msg string `json:"msg"`
 }
 
 // GetCities godoc
@@ -324,14 +310,17 @@ func (s *Server) Start() error {
 	s.App.Logg.Info("http server starting")
 	r := chi.NewRouter()
 	s.Srv = &http.Server{Addr: s.Addr, Handler: r}
+
 	r.Get("/cities", loggingMiddleware(s.GetCities, s.App.Logg))
 	r.Get("/short", loggingMiddleware(s.GetShort, s.App.Logg))
 	r.Get("/detail", loggingMiddleware(s.GetDetail, s.App.Logg))
-	r.Post("/insert_user", loggingMiddleware(s.InsertUser, s.App.Logg))
-	r.Post("/insert_fav", loggingMiddleware(s.InsertFav, s.App.Logg))
 	r.Get("/short_favor", loggingMiddleware(s.GetShortFavor, s.App.Logg))
 	r.Get("/detail_favor", loggingMiddleware(s.GetDetailFavor, s.App.Logg))
 	r.Get("/swagger/*", httpSwagger.Handler())
+
+	r.Post("/insert_user", loggingMiddleware(s.InsertUser, s.App.Logg))
+	r.Post("/insert_fav", loggingMiddleware(s.InsertFav, s.App.Logg))
+
 	s.Srv.ListenAndServe()
 	return nil
 }
