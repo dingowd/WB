@@ -46,11 +46,6 @@ type Request struct {
 // @Failure 500 {object} utils.Err
 // @Router /cities [get]
 func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t GET"))
-		return
-	}
 	// получаем список городов из базы
 	cities, err := s.App.Storage.GetCities()
 	if err != nil {
@@ -85,11 +80,6 @@ func (s *Server) GetCities(w http.ResponseWriter, r *http.Request) {
 // @Router /short [get]
 func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t GET"))
-		return
-	}
 	name := r.URL.Query().Get("city")
 	if len(name) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -130,11 +120,6 @@ func (s *Server) GetShort(w http.ResponseWriter, r *http.Request) {
 // @Router /detail [get]
 func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t GET"))
-		return
-	}
 	name := r.URL.Query().Get("city")
 	date := r.URL.Query().Get("date")
 	if len(name) == 0 || len(date) == 0 {
@@ -179,11 +164,6 @@ func (s *Server) GetDetail(w http.ResponseWriter, r *http.Request) {
 // @Router /insert_user [post]
 func (s *Server) InsertUser(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t POST"))
-		return
-	}
 	name := r.URL.Query().Get("name")
 	if len(name) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -213,11 +193,6 @@ func (s *Server) InsertUser(w http.ResponseWriter, r *http.Request) {
 // @Router /insert_fav [post]
 func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t POST"))
-		return
-	}
 	name := r.URL.Query().Get("name")
 	city := r.URL.Query().Get("city")
 	if len(name) == 0 || len(city) == 0 {
@@ -248,11 +223,6 @@ func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 // @Router /short_favor [get]
 func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t GET"))
-		return
-	}
 	name := r.URL.Query().Get("name")
 	if len(name) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -303,11 +273,6 @@ func (s *Server) GetShortFavor(w http.ResponseWriter, r *http.Request) {
 // @Router /detail_favor [get]
 func (s *Server) GetDetailFavor(w http.ResponseWriter, r *http.Request) {
 	s.App.Storage.Wait()
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(utils.ReturnError("Method isn`t GET"))
-		return
-	}
 	name := r.URL.Query().Get("name")
 	date := r.URL.Query().Get("date")
 	if len(name) == 0 || len(date) == 0 {
@@ -356,24 +321,17 @@ func (s *Server) GetDetailFavor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Start() error {
-	r := chi.NewRouter()
-
-	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:1323/swagger/doc.json")))
-
-	go http.ListenAndServe(":1323", r)
-
 	s.App.Logg.Info("http server starting")
-	mux := http.NewServeMux()
-	s.Srv = &http.Server{Addr: s.Addr, Handler: mux}
-	mux.HandleFunc("/cities", loggingMiddleware(s.GetCities, s.App.Logg))
-	mux.HandleFunc("/short", loggingMiddleware(s.GetShort, s.App.Logg))
-	mux.HandleFunc("/detail", loggingMiddleware(s.GetDetail, s.App.Logg))
-	mux.HandleFunc("/insert_user", loggingMiddleware(s.InsertUser, s.App.Logg))
-	mux.HandleFunc("/insert_fav", loggingMiddleware(s.InsertFav, s.App.Logg))
-	mux.HandleFunc("/short_favor", loggingMiddleware(s.GetShortFavor, s.App.Logg))
-	mux.HandleFunc("/detail_favor", loggingMiddleware(s.GetDetailFavor, s.App.Logg))
-	//mux.HandleFunc("/swagger/*", httpSwagger.Handler(httpSwagger.URL("http://localhost:3541/swagger/doc.json")))
-
+	r := chi.NewRouter()
+	s.Srv = &http.Server{Addr: s.Addr, Handler: r}
+	r.Get("/cities", loggingMiddleware(s.GetCities, s.App.Logg))
+	r.Get("/short", loggingMiddleware(s.GetShort, s.App.Logg))
+	r.Get("/detail", loggingMiddleware(s.GetDetail, s.App.Logg))
+	r.Post("/insert_user", loggingMiddleware(s.InsertUser, s.App.Logg))
+	r.Post("/insert_fav", loggingMiddleware(s.InsertFav, s.App.Logg))
+	r.Get("/short_favor", loggingMiddleware(s.GetShortFavor, s.App.Logg))
+	r.Get("/detail_favor", loggingMiddleware(s.GetDetailFavor, s.App.Logg))
+	r.Get("/swagger/*", httpSwagger.Handler())
 	s.Srv.ListenAndServe()
 	return nil
 }
