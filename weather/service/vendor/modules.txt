@@ -5,14 +5,11 @@ github.com/BurntSushi/toml/internal
 # github.com/KyleBanks/depth v1.2.1
 ## explicit
 github.com/KyleBanks/depth
-# github.com/PuerkitoBio/purell v1.1.1
-## explicit
-# github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+# github.com/cockroachdb/apd v1.1.0
 ## explicit
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
-# github.com/dingowd/WB/L0 v0.0.0-20221021165222-6624a1d44606
-## explicit; go 1.18
+github.com/davecgh/go-spew/spew
 # github.com/go-chi/chi v1.5.4
 ## explicit; go 1.16
 github.com/go-chi/chi
@@ -30,6 +27,8 @@ github.com/go-openapi/spec
 ## explicit; go 1.18
 github.com/go-openapi/swag
 # github.com/gofrs/uuid v4.3.0+incompatible
+## explicit
+# github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 ## explicit
 # github.com/jackc/pgx v3.6.2+incompatible
 ## explicit
@@ -64,13 +63,18 @@ github.com/mailru/easyjson/jwriter
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/rogpeppe/go-internal v1.8.0
 ## explicit; go 1.11
+# github.com/shopspring/decimal v1.3.1
+## explicit; go 1.13
 # github.com/sirupsen/logrus v1.9.0
 ## explicit; go 1.13
 github.com/sirupsen/logrus
-# github.com/stretchr/testify v1.8.0
+# github.com/stretchr/testify v1.8.1
 ## explicit; go 1.13
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
 ## explicit; go 1.15
 github.com/swaggo/files
@@ -115,10 +119,6 @@ golang.org/x/tools/go/buildutil
 golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/loader
 golang.org/x/tools/internal/typeparams
-# gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
-## explicit; go 1.11
-# gopkg.in/yaml.v2 v2.4.0
-## explicit; go 1.15
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
