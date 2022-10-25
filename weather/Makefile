@@ -1,7 +1,7 @@
-dockerbuild:
+build:
 	docker build -f DockerWeather . --tag weather
 	docker build -f DockerPostgres . --tag postgres-con
-dockerup:
+up:
 	docker-compose up -d
-dockerdown:
+down:
 	docker-compose down

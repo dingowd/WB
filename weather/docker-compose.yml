@@ -29,5 +29,4 @@ services:
           - weather
 networks:
   postgres:
-    ipam:
-      driver: default
+    driver: bridge
