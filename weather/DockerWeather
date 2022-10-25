@@ -1,0 +1,11 @@
+FROM ubuntu:latest
+ADD service/cmd/command/weather /service/
+ADD service/config/config.toml /service/config/
+ADD service/docs/swagger.json /service/docs/
+ADD service/docs/swagger.yaml /service/docs/
+ADD service/templates/cities.html /service/templates/
+ADD service/templates/detail.html /service/templates/
+ADD service/templates/details.html /service/templates/
+ADD service/templates/short.html /service/templates/
+ADD service/templates/shorts.html /service/templates/
+CMD ["/bin/bash"]
