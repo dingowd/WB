@@ -202,7 +202,6 @@ func (s *Server) InsertFav(w http.ResponseWriter, r *http.Request) {
 // @Description Получить краткий прогноз избранных городов
 // @Produce json
 // @Param name query string true "Имя пользователя"
-// @Param city query string true "Название города"
 // @Success 200 {array} models.ShortWeather
 // @Failure 400 {object} utils.Err
 // @Failure 500 {object} utils.Err

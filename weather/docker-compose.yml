@@ -8,24 +8,26 @@ services:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "masterkey"
     volumes:
-          - ./init:/docker-entrypoint-initdb.d
+      - ./initDBSrips:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     restart: unless-stopped
     networks:
       postgres:
         aliases:
-          - postgres
+          - postgresdb
   weather:
     container_name: weather
     image: weather
+    stdin_open: true
     ports:
       - "3541:3541"
     restart: unless-stopped
     networks:
       postgres:
         aliases:
-          - service
+          - weather
 networks:
   postgres:
-    driver: bridge
+    ipam:
+      driver: default

@@ -276,13 +276,6 @@ const docTemplate = `{
                         "name": "name",
                         "in": "query",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Название города",
-                        "name": "city",
-                        "in": "query",
-                        "required": true
                     }
                 ],
                 "responses": {

@@ -324,11 +324,6 @@ paths:
         name: name
         required: true
         type: string
-      - description: Название города
-        in: query
-        name: city
-        required: true
-        type: string
       produces:
       - application/json
       responses:

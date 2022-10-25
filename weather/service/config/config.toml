@@ -1,5 +1,6 @@
 #to connect db
-dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+#dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+dsn = "postgres://postgres:masterkey@localhost:5432/weather?sslmode=disable"
 #http server parameters
 httpsrv = "127.0.0.1:3541"
 #external API key
