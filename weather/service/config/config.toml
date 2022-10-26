@@ -1,5 +1,7 @@
 #to connect db
-#dsn = "user=postgres dbname=weather sslmode=disable password=masterkey"
+#for localhost
+#dsn = "postgres://postgres:masterkey@localhost:5432/weather?sslmode=disable"
+#for Docker
 dsn = "postgres://postgres:masterkey@postgresdb:5432/weather?sslmode=disable"
 #http server parameters
 httpsrv = ":3541"
