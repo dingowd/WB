@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: "postgres"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "masterkey"
-    volumes:
-      - ./initDBSrips:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     restart: unless-stopped
