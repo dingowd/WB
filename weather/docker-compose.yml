@@ -3,10 +3,6 @@ services:
   postgres:
     container_name: postgres-con
     image: postgres-con
-    environment:
-      POSTGRES_DB: "postgres"
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "masterkey"
     ports:
       - "5432:5432"
     restart: unless-stopped
